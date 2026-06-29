@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulk Messenger</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#25D366;--green-dark:#128C7E;--green-mid:#1DAA61;
+  --green-light:#dcf8c6;--green-bg:#e9f7ef;
+  --bg:#f0f2f5;--white:#fff;--text:#111b21;--muted:#667781;
+  --border:#e9edef;--r:10px;--rs:6px;
+  --sh:0 1px 3px rgba(0,0,0,.08);
+  --blue:#1e40af;--blue-bg:#dbeafe;
+}
+kbd{font-family:inherit;background:#f0f2f5;border:1px solid var(--border);border-radius:3px;padding:1px 5px;font-size:11px}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+.app{max-width:1120px;margin:0 auto;background:var(--white);min-height:100vh;display:flex;flex-direction:column;box-shadow:0 0 0 1px var(--border)}
+
+/* HEADER */
+.hdr{background:var(--green-dark);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.hdr-logo{width:38px;height:38px;background:rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hdr-info h1{font-size:16px;font-weight:600}
+.hdr-info p{font-size:11px;opacity:.72;margin-top:1px}
+.hdr-badge{margin-left:auto;background:rgba(255,255,255,.18);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+
+/* TABS */
+.tabs{display:flex;background:#0f7460;border-bottom:1px solid rgba(0,0,0,.15);flex-shrink:0;overflow-x:auto}
+.tab{padding:11px 22px;color:rgba(255,255,255,.6);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;display:flex;align-items:center;gap:7px;transition:color .15s,border-color .15s;user-select:none}
+.tab:hover{color:rgba(255,255,255,.9)}
+.tab.active{color:#fff;border-bottom-color:#fff}
+.tab svg{opacity:.65}
+.tab.active svg{opacity:1}
+
+/* PANELS */
+.panel{display:none;flex:1}
+.panel.active{display:block}
+.pane{padding:20px}
+
+/* GRID */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+/* CARD */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--sh)}
+.card:last-child{margin-bottom:0}
+.card-title{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:13px;display:flex;align-items:center;gap:6px}
+
+/* FORMS */
+label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px}
+input,textarea,select{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border-color .15s,box-shadow .15s;line-height:1.5}
+input[type=date]{font-family:'DM Sans',sans-serif}
+input:focus,textarea:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(37,211,102,.12)}
+textarea{resize:vertical;min-height:100px;line-height:1.55}
+input::placeholder,textarea::placeholder{color:#b0bec5}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23667781' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;cursor:pointer}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;border:none;white-space:nowrap;transition:all .15s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:var(--green-mid)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#1d3896}
+.btn-secondary{background:transparent;color:var(--green-dark);border:1px solid var(--green)}
+.btn-secondary:hover{background:var(--green-bg)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg)}
+.btn-danger{background:transparent;color:#c0392b;border:1px solid #f5c6c2}
+.btn-danger:hover{background:#fdf1f0}
+.btn-sm{padding:6px 13px;font-size:12px}
+.btn-xs{padding:4px 9px;font-size:11px;border-radius:4px}
+
+/* LAYOUT UTILS */
+.flex{display:flex;align-items:center}
+.gap-8{gap:8px}
+.gap-12{gap:12px}
+.mt-8{margin-top:8px}
+.ml-auto{margin-left:auto}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.mono{font-family:'DM Mono',monospace}
+.hint{font-size:11px;color:var(--muted);margin-top:5px}
+code.tc{background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:10px}
+.counter{font-size:11px;background:var(--green);color:#fff;border-radius:10px;padding:1px 7px;font-weight:600;margin-left:4px}
+
+/* CHIPS */
+.chip-area{min-height:46px;padding:5px;border:1px solid var(--border);border-radius:var(--rs);background:#fafafa;display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:var(--white);border:1px solid var(--border);color:var(--muted);border-radius:20px;font-size:12px;cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{border-color:var(--green);color:var(--green-dark)}
+.chip.sel{background:var(--green);color:#fff;border-color:var(--green)}
+.chip-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.7;flex-shrink:0}
+
+/* GROUP FILTER */
+.gf-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.gfbtn{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--muted);font-family:'DM Sans',sans-serif;transition:all .15s}
+.gfbtn:hover{border-color:var(--green);color:var(--green-dark)}
+.gfbtn.act{background:var(--green);color:#fff;border-color:var(--green)}
+.gfbtn[data-g="Tours"].act{background:#1d4ed8;border-color:#1d4ed8}
+.gfbtn[data-g="Treks"].act{background:#15803d;border-color:#15803d}
+.gfbtn[data-g="Adventure"].act{background:#b45309;border-color:#b45309}
+.gfbtn[data-g="Camping"].act{background:#9d174d;border-color:#9d174d}
+
+/* TAGS */
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:var(--green-bg);color:#065f46;border-radius:20px;font-size:11px;font-weight:500;margin:2px}
+.tag .rm{cursor:pointer;opacity:.55;font-size:15px;line-height:1}
+.tag .rm:hover{opacity:1}
+
+/* GROUP BADGE in table */
+.gb{display:inline-flex;align-items:center;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.gb-Tours{background:#dbeafe;color:#1e3a8a}
+.gb-Treks{background:#dcfce7;color:#14532d}
+.gb-Adventure{background:#fef3c7;color:#78350f}
+.gb-Camping{background:#fce7f3;color:#831843}
+.gb-def{background:var(--green-bg);color:#065f46}
+
+/* SEARCH WRAP */
+.sw{position:relative}
+.sw-ic{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.sw input{padding-left:34px}
+
+/* STATUS BADGE */
+.sb{display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:500}
+.sb-sent{background:#dcfce7;color:#166534}
+.sb-fail{background:#fee2e2;color:#991b1b}
+.sb-q{background:#e0e7ff;color:#3730a3}
+.sb-skip{background:#fef3c7;color:#92400e}
+
+/* PROGRESS */
+.prog-wrap{margin-bottom:12px}
+.prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+.prog-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:3px;transition:width .35s ease}
+
+/* WA PREVIEW */
+.wa-bg{background:#e5ddd5;border-radius:8px;padding:14px 10px;min-height:180px}
+.wa-bubble{background:var(--green-light);border-radius:8px 8px 0 8px;padding:10px 13px;max-width:85%;margin-left:auto;margin-bottom:4px}
+.wa-txt{font-size:13.5px;line-height:1.5;color:#111;white-space:pre-wrap;word-break:break-word}
+.wa-meta{font-size:10px;color:var(--muted);text-align:right;margin-top:4px;display:flex;align-items:center;justify-content:flex-end;gap:3px}
+.wa-img-prev{width:100%;max-width:200px;border-radius:6px;display:block;margin-bottom:6px}
+
+/* EMAIL PREVIEW */
+.ep{border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;font-size:13px}
+.ep-field{background:#f8f9fa;padding:9px 14px;border-bottom:1px solid var(--border)}
+.ep-lbl{font-size:11px;color:var(--muted);margin-bottom:2px}
+.ep-val{font-weight:500}
+.ep-body{background:var(--white);padding:14px;min-height:150px;line-height:1.65;color:var(--text)}
+
+/* TABLE */
+.tbl-wrap{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+thead{background:#f8f9fa}
+th{font-size:11px;font-weight:600;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:#f9fbf9}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.sp{flex:1;min-width:4px}
+
+/* NOTIFICATIONS */
+.notif{padding:11px 15px;border-radius:var(--rs);font-size:13px;margin-bottom:12px;display:flex;align-items:center;gap:9px;animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.n-success{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.n-info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+.n-warn{background:#fef9c3;color:#92400e;border:1px solid #fde68a}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty svg{display:block;margin:0 auto 12px;opacity:.3}
+.empty p{font-size:13px}
+
+/* DROP ZONE */
+.drop-zone{border:1.5px dashed var(--border);border-radius:var(--rs);padding:16px;text-align:center;cursor:pointer;transition:all .15s;color:var(--muted);font-size:12px}
+.drop-zone:hover{border-color:var(--green);background:var(--green-bg);color:var(--green-dark)}
+.drop-zone svg{display:block;margin:0 auto 6px;opacity:.4}
+
+/* IMAGE THUMB */
+.img-thumb{width:56px;height:56px;border-radius:6px;object-fit:cover;border:1px solid var(--border)}
+
+/* MODALS */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center}
+.modal-ov.open{display:flex}
+.modal{background:var(--white);border-radius:14px;padding:22px;width:430px;max-width:96vw;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.modal-hdr h3{font-size:15px;font-weight:600}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--muted);font-size:22px;line-height:1;padding:2px 4px}
+.modal-close:hover{color:var(--text)}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:4px}
+.modal-grid .full{grid-column:1/-1}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+
+/* RICH TEXT EDITOR */
+.rte-bar{display:flex;gap:4px;flex-wrap:wrap;padding:6px 8px;background:#f8f9fa;border:1px solid var(--border);border-bottom:none;border-radius:var(--rs) var(--rs) 0 0}
+.rte-btn{padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--white);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);transition:all .12s;line-height:1.5}
+.rte-btn:hover{background:var(--bg)}
+.rte-sep{width:1px;background:var(--border);margin:0 2px}
+.rte-body{min-height:130px;border:1px solid var(--border);border-radius:0 0 var(--rs) var(--rs);padding:10px 12px;font-size:13px;line-height:1.6;outline:none;background:var(--white)}
+.rte-body:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,64,175,.1)}
+.rte-body:empty::before{content:attr(data-ph);color:#b0bec5;pointer-events:none}
+
+.stats-row{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+.stat-item{font-size:12px}
+
+
+/* LOGIN SCREEN */
+#login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0f7460 0%,#128C7E 50%,#075e54 100%);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+#login-screen.hidden{display:none}
+.login-card{background:#fff;border-radius:16px;padding:36px 32px;width:380px;max-width:100%;box-shadow:0 25px 70px rgba(0,0,0,.3)}
+.login-logo{width:56px;height:56px;background:var(--green-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.login-card h2{text-align:center;font-size:19px;font-weight:600;margin-bottom:4px;color:var(--text)}
+.login-card p.sub{text-align:center;font-size:12px;color:var(--muted);margin-bottom:26px}
+.login-field{margin-bottom:16px}
+.login-field label{font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;display:block}
+.login-field input{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--rs);font-size:14px;outline:none;transition:border-color .15s,box-shadow .15s}
+.login-field input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(37,211,102,.12)}
+.login-error{background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:var(--rs);padding:9px 12px;font-size:12px;margin-bottom:14px;display:none;align-items:center;gap:7px}
+.login-error.show{display:flex}
+.login-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'DM Sans',sans-serif}
+.login-btn:hover{background:var(--green-mid)}
+.login-btn:active{transform:scale(.99)}
+.login-remember{display:flex;align-items:center;gap:7px;margin-bottom:18px;font-size:12px;color:var(--muted)}
+.login-remember input{width:auto;margin:0}
+#logout-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;padding:5px 12px;border-radius:20px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;white-space:nowrap}
+#logout-btn:hover{background:rgba(255,255,255,.25)}
+
+@media(max-width:700px){
+  .grid2{grid-template-columns:1fr}
+  .toolbar{flex-direction:column;align-items:stretch}
+  .modal-grid{grid-template-columns:1fr}
+  .modal-grid .full{grid-column:1}
+  td,th{white-space:nowrap}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg width="26" height="26" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.863L.054 23.25a.75.75 0 00.916.916l5.387-1.478A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.948 9.948 0 01-5.2-1.43l-.373-.22-3.865 1.06 1.06-3.865-.22-.373A9.955 9.955 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+    </div>
+    <h2>Bulk Messenger</h2>
+    <p class="sub">Sign in to access your contacts &amp; campaigns</p>
+
+    <div class="login-error" id="login-error">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="login-error-text">Invalid User ID or Password</span>
+    </div>
+
+    <div class="login-field">
+      <label>User ID</label>
+      <input type="text" id="login-userid" placeholder="Enter User ID" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-password').focus()">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="Enter Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-remember">
+      <input type="checkbox" id="login-remember" checked>
+      <label for="login-remember" style="margin:0;cursor:pointer">Keep me signed in on this device</label>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<div class="app" id="main-app" style="display:none">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-logo">
+    <svg width="22" height="22" fill="white" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.863L.054 23.25a.75.75 0 00.916.916l5.387-1.478A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.948 9.948 0 01-5.2-1.43l-.373-.22-3.865 1.06 1.06-3.865-.22-.373A9.955 9.955 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+  </div>
+  <div class="hdr-info">
+    <h1>Bulk Messenger</h1>
+    <p>Send WhatsApp messages &amp; emails to multiple contacts</p>
+  </div>
+  <div class="hdr-badge" id="hdr-badge">0 contacts</div>
+  <button id="logout-btn" onclick="doLogout()">
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Logout
+  </button>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" id="tab-wa" onclick="switchTab('wa')">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    WhatsApp Sender
+  </div>
+  <div class="tab" id="tab-email" onclick="switchTab('email')">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    Bulk Email
+  </div>
+  <div class="tab" id="tab-contacts" onclick="switchTab('contacts')">
+    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+    Contacts Directory
+    <span class="counter" id="ct-counter">0</span>
+  </div>
+</div>
+
+<!-- WA PANEL -->
+<div class="panel active" id="panel-wa">
+  <div class="pane">
+    <div id="wa-notif"></div>
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <div class="card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Recipients<span class="counter" id="wa-rec-cnt">0</span></div>
+          <label>Filter by group</label>
+          <div class="gf-wrap" id="wa-gf">
+            <button class="gfbtn act" data-g="All" onclick="waGF('All',this)">All</button>
+            <button class="gfbtn" data-g="Tours" onclick="waGF('Tours',this)">Tours</button>
+            <button class="gfbtn" data-g="Treks" onclick="waGF('Treks',this)">Treks</button>
+            <button class="gfbtn" data-g="Adventure" onclick="waGF('Adventure',this)">Adventure</button>
+            <button class="gfbtn" data-g="Camping" onclick="waGF('Camping',this)">Camping</button>
+          </div>
+          <label>Search contacts</label>
+          <div class="sw" style="margin-bottom:8px">
+            <svg class="sw-ic" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="wa-search" placeholder="Search…" oninput="renderWAChips()">
+          </div>
+          <div class="chip-area" id="wa-chips"></div>
+          <div class="flex gap-8 mt-8" style="flex-wrap:wrap">
+            <button class="btn btn-secondary btn-xs" onclick="waSelAll()">Select all</button>
+            <button class="btn btn-ghost btn-xs" onclick="waClear()">Clear all</button>
+            <span class="ml-auto" style="font-size:11px;color:var(--muted)" id="wa-chip-hint">0 selected</span>
+          </div>
+          <div class="divider"></div>
+          <label>Add number manually</label>
+          <div class="flex gap-8">
+            <input type="tel" id="wa-manual" placeholder="+91 98765 43210" style="flex:1" onkeydown="if(event.key==='Enter')waAddManual()">
+            <button class="btn btn-secondary btn-sm" onclick="waAddManual()">Add</button>
+          </div>
+          <div id="wa-manual-tags" class="mt-8"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Message</div>
+          <label>Message text</label>
+          <textarea id="wa-msg" placeholder="Type your message…&#10;Use {{name}} to personalise." oninput="updateWAPrev()"></textarea>
+          <p class="hint">Use <code class="tc">{{name}}</code> to personalise per contact</p>
+          <div class="divider"></div>
+          <label>Attach image (optional)</label>
+          <div class="drop-zone" id="wa-drop" onclick="document.getElementById('wa-img-inp').click()" ondragover="event.preventDefault()" ondrop="waDrop(event)">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            Click to upload or drag &amp; drop
+          </div>
+          <input type="file" id="wa-img-inp" accept="image/*" style="display:none" onchange="waLoadImg(event)">
+          <div id="wa-img-prev" style="display:none;margin-top:8px">
+            <div class="flex gap-8" style="align-items:flex-start">
+              <img id="wa-img-thumb" class="img-thumb" src="" alt="">
+              <div>
+                <div style="font-size:12px;font-weight:500" id="wa-img-name"></div>
+                <div style="font-size:11px;color:var(--muted)" id="wa-img-size"></div>
+                <button class="btn btn-danger btn-xs mt-8" onclick="waRemoveImg()">Remove</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:6px">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Send Settings
+            </div>
+            <button class="btn btn-secondary btn-xs" onclick="document.getElementById('ext-modal').classList.add('open')">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Install Auto-Send Extension
+            </button>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="flex:1">
+              <label>Delay between contacts (seconds)</label>
+              <input type="number" id="wa-delay" value="30" min="10" max="300" class="mono">
+              <p class="hint">Min 10s — keeps your account safe</p>
+            </div>
+          </div>
+
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--rs);padding:10px 12px;margin-top:10px;font-size:12px;color:#166534;line-height:1.55">
+            <strong>How it works:</strong> Click <em>Start Sending</em> once. WhatsApp Web opens per contact, the extension auto-presses Send, the tab closes, and the next contact loads automatically — fully hands-free.
+          </div>
+        </div>
+
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Preview</div>
+          <div class="wa-bg">
+            <div id="wa-prev-img"></div>
+            <div class="wa-bubble">
+              <div class="wa-txt" id="wa-prev-txt">Your message will appear here</div>
+              <div class="wa-meta">10:30 AM <svg width="14" height="10" viewBox="0 0 16 11" fill="#53bdeb"><path d="M11.071.653a.75.75 0 0 1 1.06 1.06l-6.5 6.5a.75.75 0 0 1-1.06 0l-3-3A.75.75 0 0 1 2.63 4.15l2.47 2.47 5.97-5.967Z"/><path d="M15.071.653a.75.75 0 0 1 1.06 1.06l-6.5 6.5a.75.75 0 0 1-1.06-1.06l6.5-6.5Z" transform="translate(-4,0)"/></svg></div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="flex gap-8" style="justify-content:space-between;align-items:center;flex-wrap:wrap">
+            <div><div style="font-size:12px;color:var(--muted)">Total recipients</div><div style="font-size:24px;font-weight:600;color:var(--green)" id="wa-total">0</div></div>
+            <button class="btn btn-primary" id="wa-send-btn" onclick="waSendAll()" style="padding:11px 22px;font-size:14px">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Start Sending
+            </button>
+          </div>
+        </div>
+        <div class="card" id="wa-res-card" style="display:none">
+          <div class="card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Progress</div>
+          <div class="prog-wrap"><div class="prog-lbl"><span id="wa-prog-lbl">Sending…</span><span id="wa-prog-pct">0%</span></div><div class="prog-bar"><div class="prog-fill" id="wa-prog-fill" style="width:0%"></div></div></div>
+          <div class="stats-row"><div class="stat-item"><span style="color:var(--green);font-weight:600" id="wa-s-sent">0</span> <span style="color:var(--muted)">sent</span></div><div class="stat-item"><span style="color:#c0392b;font-weight:600" id="wa-s-fail">0</span> <span style="color:var(--muted)">failed</span></div><div class="stat-item"><span style="color:#3730a3;font-weight:600" id="wa-s-pend">0</span> <span style="color:var(--muted)">pending</span></div></div>
+          <div style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rs)">
+            <table><thead><tr><th style="width:40px"></th><th>Name</th><th>Phone</th><th style="width:80px">Status</th></tr></thead><tbody id="wa-res-tbody"></tbody></table>
+          </div>
+          <div class="flex gap-8 mt-8" id="wa-res-actions" style="display:none">
+            <button class="btn btn-secondary btn-sm" onclick="waExport()">Export CSV</button>
+            <button class="btn btn-ghost btn-sm" onclick="waReset()">Reset</button>
+          </div>
+        </div>
+
+        <!-- AUTO-RUN STATUS CARD -->
+        <div class="card" id="wa-auto-card" style="display:none">
+          <div class="card-title">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            Auto Sending
+            <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--muted)" id="wa-auto-status-txt">Running...</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:12px;background:#f8f9fa;border:1px solid var(--border);border-radius:var(--rs);margin-bottom:12px">
+            <div id="wa-auto-avatar" style="width:42px;height:42px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:600;flex-shrink:0">?</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="wa-auto-name">—</div>
+              <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace" id="wa-auto-phone">—</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:11px;color:var(--muted);margin-bottom:2px">Next in</div>
+              <div style="font-size:20px;font-weight:700;color:var(--green);font-family:'DM Mono',monospace" id="wa-auto-countdown">—</div>
+            </div>
+          </div>
+          <div class="flex gap-8" style="justify-content:space-between;align-items:center">
+            <div style="display:flex;gap:16px">
+              <div style="font-size:12px"><span style="color:var(--green);font-weight:600" id="wa-auto-sent">0</span> <span style="color:var(--muted)">sent</span></div>
+              <div style="font-size:12px"><span style="color:#b45309;font-weight:600" id="wa-auto-skip">0</span> <span style="color:var(--muted)">skipped</span></div>
+              <div style="font-size:12px"><span style="color:var(--muted);font-weight:500" id="wa-auto-rem">0</span> <span style="color:var(--muted)">remaining</span></div>
+            </div>
+            <button class="btn btn-danger btn-xs" id="wa-stop-btn" onclick="waStopAuto()">Stop</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EMAIL PANEL -->
+<div class="panel" id="panel-email">
+  <div class="pane">
+    <div id="em-notif"></div>
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <div class="card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Recipients<span class="counter" id="em-rec-cnt">0</span></div>
+          <label>Filter by group</label>
+          <div class="gf-wrap" id="em-gf">
+            <button class="gfbtn act" data-g="All" onclick="emGF('All',this)">All</button>
+            <button class="gfbtn" data-g="Tours" onclick="emGF('Tours',this)">Tours</button>
+            <button class="gfbtn" data-g="Treks" onclick="emGF('Treks',this)">Treks</button>
+            <button class="gfbtn" data-g="Adventure" onclick="emGF('Adventure',this)">Adventure</button>
+            <button class="gfbtn" data-g="Camping" onclick="emGF('Camping',this)">Camping</button>
+          </div>
+          <label>Search contacts</label>
+          <div class="sw" style="margin-bottom:8px">
+            <svg class="sw-ic" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="search" id="em-search" placeholder="Search contacts with email…" oninput="renderEmChips()">
+          </div>
+          <div class="chip-area" id="em-chips"></div>
+          <div class="flex gap-8 mt-8" style="flex-wrap:wrap">
+            <button class="btn btn-secondary btn-xs" onclick="emSelAll()">Select all</button>
+            <button class="btn btn-ghost btn-xs" onclick="emClear()">Clear all</button>
+            <span class="ml-auto" style="font-size:11px;color:var(--muted)" id="em-chip-hint">0 selected</span>
+          </div>
+          <div class="divider"></div>
+          <label>Add email manually</label>
+          <div class="flex gap-8">
+            <input type="text" id="em-manual" placeholder="someone@example.com" style="flex:1" onkeydown="if(event.key==='Enter')emAddManual()">
+            <button class="btn btn-secondary btn-sm" onclick="emAddManual()">Add</button>
+          </div>
+          <div id="em-manual-tags" class="mt-8"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Compose</div>
+          <div style="margin-bottom:10px"><label>From Name</label><input type="text" id="em-from" placeholder="Your Name or Company"></div>
+          <div style="margin-bottom:10px"><label>Subject <span style="color:#c0392b">*</span></label><input type="text" id="em-subject" placeholder="e.g. Upcoming Trek — June 2025" oninput="updateEmPrev()"></div>
+          <div style="margin-bottom:6px">
+            <label>Body <span style="color:#c0392b">*</span></label>
+            <div class="rte-bar">
+              <button class="rte-btn" onclick="rte('bold')"><b>B</b></button>
+              <button class="rte-btn" onclick="rte('italic')"><i>I</i></button>
+              <button class="rte-btn" onclick="rte('underline')"><u>U</u></button>
+              <div class="rte-sep"></div>
+              <button class="rte-btn" onclick="rte('formatBlock','h2')">H2</button>
+              <button class="rte-btn" onclick="rte('insertUnorderedList')">• List</button>
+              <button class="rte-btn" onclick="rte('insertOrderedList')">1. List</button>
+              <div class="rte-sep"></div>
+              <button class="rte-btn" onclick="rteLink()">Link</button>
+              <button class="rte-btn" onclick="rte('removeFormat')" style="color:#c0392b">Clear</button>
+            </div>
+            <div id="em-body" class="rte-body" contenteditable="true" data-ph="Write your email here… Use {{name}} to personalise." oninput="updateEmPrev()"></div>
+          </div>
+          <p class="hint">Use <code class="tc">{{name}}</code> to insert each contact's name</p>
+          <div class="divider"></div>
+          <label>Attach file (optional)</label>
+          <div class="drop-zone" id="em-drop" onclick="document.getElementById('em-file-inp').click()" ondragover="event.preventDefault()" ondrop="emDrop(event)">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+            Click or drag &amp; drop to attach
+          </div>
+          <input type="file" id="em-file-inp" style="display:none" onchange="emSetAttach(event)">
+          <div id="em-attach-info" style="display:none;margin-top:8px">
+            <div class="flex gap-8" style="align-items:center">
+              <svg width="28" height="28" fill="none" stroke="#378add" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <div><div style="font-size:12px;font-weight:500" id="em-att-name"></div><div style="font-size:11px;color:var(--muted)" id="em-att-size"></div></div>
+              <button class="btn btn-danger btn-xs ml-auto" onclick="emRemoveAttach()">Remove</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between"><div style="display:flex;align-items:center;gap:6px"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Send Settings</div><button class="btn btn-secondary btn-xs" onclick="document.getElementById('ext-modal').classList.add('open')"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Install Auto-Send Extension</button></div>
+          <div class="grid2" style="gap:12px">
+            <div><label>Delay (ms)</label><input type="text" id="em-delay" value="800" class="mono"></div>
+            <div><label>Send via</label>
+              <select id="em-mode" onchange="updateEmHint()">
+                <option value="sim">Simulation (demo)</option>
+                <option value="mailto">mailto: links</option>
+              </select>
+            </div>
+          </div>
+          <p class="hint mt-8" id="em-hint">Simulation mode: no real emails sent.</p>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Email Preview</div>
+          <div class="ep">
+            <div class="ep-field"><div class="ep-lbl">To</div><div class="ep-val" id="ep-to">—</div></div>
+            <div class="ep-field"><div class="ep-lbl">Subject</div><div class="ep-val" style="font-size:14px" id="ep-subject">—</div></div>
+            <div class="ep-body" id="ep-body"><span style="color:var(--muted);font-size:12px">Your email body will appear here…</span></div>
+            <div id="ep-attach" style="display:none;padding:8px 14px;background:#f8f9fa;border-top:1px solid var(--border);font-size:12px;color:var(--muted)">📎 <span id="ep-att-name"></span></div>
+          </div>
+          <div class="divider"></div>
+          <div class="flex gap-8" style="justify-content:space-between;align-items:center;flex-wrap:wrap">
+            <div><div style="font-size:12px;color:var(--muted)">Total recipients</div><div style="font-size:24px;font-weight:600;color:var(--blue)" id="em-total">0</div></div>
+            <button class="btn btn-blue" id="em-send-btn" onclick="emSendAll()" style="padding:11px 22px;font-size:14px">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              Send All Emails
+            </button>
+          </div>
+        </div>
+        <div class="card" id="em-res-card" style="display:none">
+          <div class="card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Progress</div>
+          <div class="prog-wrap"><div class="prog-lbl"><span id="em-prog-lbl">Sending…</span><span id="em-prog-pct">0%</span></div><div class="prog-bar"><div class="prog-fill" id="em-prog-fill" style="width:0%;background:var(--blue)"></div></div></div>
+          <div class="stats-row"><div class="stat-item"><span style="color:#166534;font-weight:600" id="em-s-sent">0</span> <span style="color:var(--muted)">sent</span></div><div class="stat-item"><span style="color:#c0392b;font-weight:600" id="em-s-fail">0</span> <span style="color:var(--muted)">failed</span></div><div class="stat-item"><span style="color:#3730a3;font-weight:600" id="em-s-pend">0</span> <span style="color:var(--muted)">pending</span></div></div>
+          <div style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--rs)">
+            <table><thead><tr><th style="width:40px"></th><th>Name</th><th>Email</th><th style="width:80px">Status</th></tr></thead><tbody id="em-res-tbody"></tbody></table>
+          </div>
+          <div class="flex gap-8 mt-8" id="em-res-actions" style="display:none">
+            <button class="btn btn-secondary btn-sm" onclick="emExport()">Export CSV</button>
+            <button class="btn btn-ghost btn-sm" onclick="emReset()">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACTS PANEL -->
+<div class="panel" id="panel-contacts">
+  <div class="pane">
+    <div id="ct-notif"></div>
+
+    <!-- GOOGLE SHEET STATUS BAR -->
+    <div id="gs-status-bar" style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--rs);padding:10px 14px;margin-bottom:14px;flex-wrap:wrap">
+      <svg width="16" height="16" fill="none" stroke="#166534" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+      <span style="font-size:12px;color:#166534;font-weight:500" id="gs-status-text">Not connected to Google Sheet</span>
+      <div class="sp"></div>
+      <button class="btn btn-secondary btn-xs" id="gs-load-btn" onclick="gsLoad()" style="display:none">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Load from Sheet
+      </button>
+      <button class="btn btn-secondary btn-xs" id="gs-push-btn" onclick="gsPush()" style="display:none">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Push to Sheet
+      </button>
+      <button class="btn btn-primary btn-xs" id="gs-connect-btn" onclick="document.getElementById('gs-modal').classList.add('open');document.getElementById('gs-url-input').value=gsUrl">
+        Connect Google Sheet
+      </button>
+      <button class="btn btn-ghost btn-xs" id="gs-disconnect-btn" onclick="gsDisconnect()" style="display:none">Disconnect</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="sw" style="flex:1;min-width:160px;max-width:360px">
+        <svg class="sw-ic" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="ct-search" placeholder="Search name, phone, email or group…" oninput="renderContacts()">
+      </div>
+      <div class="sp"></div>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ct-csv-inp').click()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import CSV
+      </button>
+      <input type="file" id="ct-csv-inp" accept=".csv,.txt" style="display:none" onchange="importCSV(event)">
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export CSV
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Contact
+      </button>
+    </div>
+    <div class="tbl-wrap" style="overflow-x:auto">
+      <table style="min-width:700px">
+        <thead>
+          <tr>
+            <th style="width:44px"></th>
+            <th style="width:160px">Name</th>
+            <th style="width:150px">Phone</th>
+            <th style="width:180px">Email</th>
+            <th style="width:110px">DOB</th>
+            <th style="width:110px">Group</th>
+            <th style="width:120px;text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="ct-tbody"></tbody>
+      </table>
+      <div class="empty" id="ct-empty" style="display:none">
+        <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <p>No contacts found. Add one or import a CSV file.</p>
+        <p style="margin-top:6px;font-size:11px">CSV columns: <code class="tc">Name, Phone, Email, DOB, Group</code></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /.app -->
+
+
+<div class="modal-ov" id="guided-modal">
+  <div class="modal" style="width:500px;max-width:96vw" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <h3 id="gm-title">Sending to <span id="gm-contact">…</span></h3>
+      <button class="modal-close" onclick="guidedStop()">&#215;</button>
+    </div>
+
+    <!-- Progress bar -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px">
+        <span id="gm-progress-lbl">Contact 1 of N</span>
+        <span id="gm-pct">0%</span>
+      </div>
+      <div class="prog-bar"><div class="prog-fill" id="gm-prog-fill" style="width:0%"></div></div>
+    </div>
+
+    <!-- Contact info -->
+    <div style="background:#f8f9fa;border:1px solid var(--border);border-radius:var(--rs);padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:3px">Sending to</div>
+      <div style="font-size:16px;font-weight:600" id="gm-name">—</div>
+      <div style="font-size:13px;color:var(--muted);font-family:'DM Mono',monospace" id="gm-phone">—</div>
+    </div>
+
+    <!-- Message preview -->
+    <div style="background:var(--green-bg);border:1px solid #bbf7d0;border-radius:var(--rs);padding:12px;margin-bottom:14px;font-size:13px;line-height:1.55;white-space:pre-wrap;max-height:100px;overflow-y:auto" id="gm-msg-prev"></div>
+
+    <!-- Instructions -->
+    <div style="background:#fff8e1;border:1px solid #fde68a;border-radius:var(--rs);padding:10px 12px;margin-bottom:16px;display:flex;gap:10px;align-items:flex-start">
+      <svg width="18" height="18" fill="none" stroke="#92400e" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <div style="font-size:12px;color:#92400e;line-height:1.55">
+        <strong>WhatsApp Web is opening with your message pre-typed.</strong><br>
+        Just press <kbd style="background:#fff;border:1px solid #fcd34d;border-radius:3px;padding:1px 6px;font-size:11px">Enter</kbd> in WhatsApp Web to send, then come back here and click <strong>Next Contact →</strong>
+      </div>
+    </div>
+
+    <!-- Countdown + actions -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:2px">Next contact in</div>
+        <div style="font-size:22px;font-weight:600;color:var(--green)" id="gm-countdown">—</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="guidedSkip()">Skip</button>
+        <button class="btn btn-primary" onclick="guidedNext()" id="gm-next-btn" style="padding:9px 20px">
+          Next Contact →
+        </button>
+      </div>
+    </div>
+
+    <!-- Stats footer -->
+    <div class="divider"></div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap">
+      <div style="font-size:12px"><span style="color:var(--green);font-weight:600" id="gm-sent">0</span> <span style="color:var(--muted)">sent</span></div>
+      <div style="font-size:12px"><span style="color:#92400e;font-weight:600" id="gm-skipped">0</span> <span style="color:var(--muted)">skipped</span></div>
+      <div style="font-size:12px"><span style="color:var(--muted);font-weight:600" id="gm-remaining">0</span> <span style="color:var(--muted)">remaining</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- EXTENSION SETUP MODAL -->
+<div class="modal-ov" id="ext-modal">
+  <div class="modal" style="width:540px;max-width:96vw" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <h3>Install the Auto Send Extension</h3>
+      <button class="modal-close" onclick="document.getElementById('ext-modal').classList.remove('open')">&#215;</button>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">One-time setup — takes under 2 minutes. Only needed for auto-send.</div>
+
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0">1</div>
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px">Download the extension</div>
+          <button class="btn btn-primary btn-sm" onclick="downloadExtension()">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download wa-extension.zip
+          </button>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Then unzip it to a permanent folder (e.g. Desktop/wa-extension)</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0">2</div>
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px">Open Chrome Extensions</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.55">Go to <code style="background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px">chrome://extensions</code> in your browser and turn on <strong>Developer mode</strong> (top-right toggle)</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0">3</div>
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px">Load the extension</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.55">Click <strong>Load unpacked</strong> → select the unzipped <code style="background:#f0f2f5;padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px">wa-extension</code> folder</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0">4</div>
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px">Log in to WhatsApp Web</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.55">Open <a href="https://web.whatsapp.com" target="_blank" style="color:var(--green-dark)">web.whatsapp.com</a> in the same Chrome window and scan the QR code once. Keep the tab open.</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;flex-shrink:0">5</div>
+        <div>
+          <div style="font-weight:600;font-size:13px;margin-bottom:4px">Done — click Start Sending!</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.55">Come back here, select contacts, type your message, and click <strong>Start Sending</strong>. The extension will press Send automatically for each contact.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ext-modal').classList.remove('open')">Close</button>
+      <button class="btn btn-primary btn-sm" onclick="downloadExtension();document.getElementById('ext-modal').classList.remove('open')">Download &amp; Close</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- GOOGLE SHEET SETUP MODAL -->
+<div class="modal-ov" id="gs-modal">
+  <div class="modal" style="width:600px;max-width:96vw" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <h3>Connect Google Sheet</h3>
+      <button class="modal-close" onclick="document.getElementById('gs-modal').classList.remove('open')">&#215;</button>
+    </div>
+
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px">One-time setup using a free Google Apps Script — no paid API needed.</div>
+
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:16px">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0">1</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">
+          Open or create a <a href="https://sheets.new" target="_blank" style="color:var(--green-dark)">Google Sheet</a>. Add headers in row 1: <code class="tc">Name</code>, <code class="tc">Phone</code>, <code class="tc">Email</code>, <code class="tc">DOB</code>, <code class="tc">Group</code>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0">2</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">
+          In the Sheet: <strong>Extensions → Apps Script</strong>. Delete the starter code and paste the script below.
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0">3</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">
+          Click <strong>Deploy → New deployment</strong> → type <strong>Web app</strong> → Execute as <strong>Me</strong> → Who has access <strong>Anyone</strong> → Deploy → authorize when prompted.
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0">4</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">
+          Copy the <strong>Web App URL</strong> it gives you, paste it below, then click Connect.
+        </div>
+      </div>
+    </div>
+
+    <!-- Code block -->
+    <div style="border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-bottom:16px">
+      <div style="background:#1e293b;padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+        <span style="color:#fff;font-size:12px;font-weight:600">sheet_bridge.gs</span>
+        <button onclick="copyGsCode(this)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 10px;border-radius:4px;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif">Copy</button>
+      </div>
+      <div style="background:#0f172a;padding:12px;max-height:200px;overflow-y:auto">
+        <pre id="gs-code-block" style="margin:0;font-family:'DM Mono',monospace;font-size:10.5px;line-height:1.6;color:#e2e8f0;white-space:pre">/**
+ * WhatsApp Bulk Messenger — Google Sheet Bridge
+ * ================================================
+ * Paste this into a Google Apps Script project bound to your Google Sheet.
+ * Deploy as a Web App to connect your Contacts Directory.
+ *
+ * SETUP:
+ * 1. Open your Google Sheet (or create a new one)
+ * 2. First row should have headers: Name | Phone | Email | DOB | Group
+ * 3. Extensions menu → Apps Script
+ * 4. Delete any starter code, paste this entire file
+ * 5. Click Deploy → New deployment → type: Web app
+ *      - Execute as: Me
+ *      - Who has access: Anyone
+ * 6. Click Deploy, authorize when prompted
+ * 7. Copy the Web App URL — paste it into the Bulk Messenger app
+ */
+
+const SHEET_NAME = ''; // leave blank to use the first/active sheet, or set a specific sheet name
+
+function getSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (SHEET_NAME) {
+    return ss.getSheetByName(SHEET_NAME) || ss.getActiveSheet();
+  }
+  return ss.getActiveSheet();
+}
+
+function jsonOut_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * GET — returns all contacts as JSON
+ * Used by the app to "Load from Sheet"
+ */
+function doGet(e) {
+  try {
+    const sheet = getSheet_();
+    const data = sheet.getDataRange().getValues();
+    if (data.length === 0) return jsonOut_({ success: true, contacts: [] });
+
+    const headers = data[0].map(h =&gt; String(h).trim().toLowerCase());
+    const idx = {
+      name:  headers.indexOf('name'),
+      phone: headers.indexOf('phone'),
+      email: headers.indexOf('email'),
+      dob:   headers.indexOf('dob'),
+      group: headers.indexOf('group'),
+    };
+
+    const contacts = [];
+    for (let i = 1; i &lt; data.length; i++) {
+      const row = data[i];
+      const name  = idx.name  &gt;= 0 ? row[idx.name]  : '';
+      const phone = idx.phone &gt;= 0 ? row[idx.phone] : '';
+      if (!name &amp;&amp; !phone) continue; // skip blank rows
+
+      contacts.push({
+        name:  String(name || ''),
+        phone: String(phone || ''),
+        email: idx.email &gt;= 0 ? String(row[idx.email] || '') : '',
+        dob:   idx.dob   &gt;= 0 ? formatDob_(row[idx.dob]) : '',
+        group: idx.group &gt;= 0 ? String(row[idx.group] || '') : '',
+      });
+    }
+
+    return jsonOut_({ success: true, contacts: contacts });
+  } catch (err) {
+    return jsonOut_({ success: false, error: err.message });
+  }
+}
+
+function formatDob_(val) {
+  if (!val) return '';
+  if (val instanceof Date) {
+    return Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  }
+  return String(val);
+}
+
+/**
+ * POST — receives an action from the app:
+ *   { type: 'sync_all', contacts: [...] }   → overwrites the whole sheet
+ *   { type: 'add', contact: {...} }          → appends one row
+ *   { type: 'delete', phone: '...' }         → deletes row matching phone
+ *
+ * NOTE: app sends Content-Type: text/plain to avoid CORS preflight issues —
+ * this script still parses it as JSON.
+ */
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    const sheet = getSheet_();
+
+    if (body.type === 'sync_all') {
+      sheet.clear();
+      sheet.appendRow(['Name', 'Phone', 'Email', 'DOB', 'Group']);
+      const rows = (body.contacts || []).map(c =&gt; [
+        c.name || '', c.phone || '', c.email || '', c.dob || '', c.group || ''
+      ]);
+      if (rows.length &gt; 0) {
+        sheet.getRange(2, 1, rows.length, 5).setValues(rows);
+      }
+      return jsonOut_({ success: true, count: rows.length });
+    }
+
+    if (body.type === 'add') {
+      const c = body.contact || {};
+      sheet.appendRow([c.name || '', c.phone || '', c.email || '', c.dob || '', c.group || '']);
+      return jsonOut_({ success: true });
+    }
+
+    if (body.type === 'delete') {
+      const data = sheet.getDataRange().getValues();
+      for (let i = 1; i &lt; data.length; i++) {
+        if (String(data[i][1]).trim() === String(body.phone).trim()) {
+          sheet.deleteRow(i + 1);
+          break;
+        }
+      }
+      return jsonOut_({ success: true });
+    }
+
+    return jsonOut_({ success: false, error: 'Unknown action type' });
+  } catch (err) {
+    return jsonOut_({ success: false, error: err.message });
+  }
+}
+</pre>
+      </div>
+    </div>
+
+    <div style="margin-bottom:6px">
+      <label>Web App URL</label>
+      <input type="text" id="gs-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+      <p class="hint">Saved locally in your browser — never sent anywhere else.</p>
+    </div>
+    <div id="gs-connect-status" style="font-size:12px;margin-top:6px"></div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('gs-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="gsConnect()">Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-ov" id="ct-modal" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-hdr">
+      <h3 id="modal-title">Add Contact</h3>
+      <button class="modal-close" onclick="closeModal()">&#215;</button>
+    </div>
+    <div class="modal-grid">
+      <div class="full"><label>Full Name <span style="color:#c0392b">*</span></label><input type="text" id="m-name" placeholder="e.g. Priya Sharma"></div>
+      <div><label>Phone <span style="color:#c0392b">*</span></label><input type="tel" id="m-phone" placeholder="+91 98765 43210"><p class="hint">Include country code</p></div>
+      <div><label>Email</label><input type="text" id="m-email" placeholder="priya@example.com"></div>
+      <div><label>Date of Birth</label><input type="date" id="m-dob"></div>
+      <div><label>Group</label>
+        <select id="m-group">
+          <option value="">— Select group —</option>
+          <option value="Tours">Tours</option>
+          <option value="Treks">Treks</option>
+          <option value="Adventure">Adventure</option>
+          <option value="Camping">Camping</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveContact()">Save Contact</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE MODAL -->
+<div class="modal-ov" id="del-modal" onclick="cancelDel()">
+  <div class="modal" onclick="event.stopPropagation()" style="width:340px;text-align:center">
+    <div style="width:48px;height:48px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+      <svg width="22" height="22" fill="none" stroke="#c0392b" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+    </div>
+    <h3 style="font-size:15px;font-weight:600;margin-bottom:6px">Delete contact?</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px"><strong id="del-name"></strong> will be permanently removed.</p>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-ghost btn-sm" onclick="cancelDel()">Cancel</button>
+      <button class="btn btn-sm" style="background:#c0392b;color:#fff;border:none" onclick="confirmDel()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ─────────────────────────────────────────────────
+let contacts=[
+  {id:1,name:'Priya Sharma', phone:'+91 98765 43210',email:'priya@example.com',      dob:'1992-04-15',group:'Tours'},
+  {id:2,name:'Rahul Verma',  phone:'+91 87654 32109',email:'rahul.v@gmail.com',       dob:'1988-11-03',group:'Treks'},
+  {id:3,name:'Anita Patel',  phone:'+91 76543 21098',email:'anita.patel@mail.com',    dob:'1995-07-22',group:'Adventure'},
+  {id:4,name:'Suresh Kumar', phone:'+91 65432 10987',email:'suresh.k@outlook.com',    dob:'1985-01-30',group:'Camping'},
+  {id:5,name:'Meera Nair',   phone:'+91 54321 09876',email:'meera.n@example.com',     dob:'1993-09-08',group:'Tours'},
+  {id:6,name:'Vivek Singh',  phone:'+91 43210 98765',email:'vivek.s@gmail.com',       dob:'1990-03-17',group:'Treks'},
+];
+let nid=7;
+let waSel=new Set(),waMan=[],waImg=null,waGrp='All',waRes=[];
+let emSel=new Set(),emMan=[],emGrp='All',emRes=[],emAtt=null;
+let editId=null,delId=null;
+
+
+// ── LOGIN / AUTH ───────────────────────────────────────────
+const AUTH_USERID   = 'IO2017';
+const AUTH_PASSWORD = 'IO@2017';
+
+function doLogin(){
+  const userId = document.getElementById('login-userid').value.trim();
+  const pass   = document.getElementById('login-password').value;
+  const remember = document.getElementById('login-remember').checked;
+  const errBox = document.getElementById('login-error');
+
+  if(userId === AUTH_USERID && pass === AUTH_PASSWORD){
+    errBox.classList.remove('show');
+    if(remember){
+      localStorage.setItem('bm_auth','1');
+    } else {
+      sessionStorage.setItem('bm_auth','1');
+    }
+    showApp();
+  } else {
+    errBox.classList.add('show');
+    document.getElementById('login-password').value='';
+    document.getElementById('login-password').focus();
+  }
+}
+
+function doLogout(){
+  localStorage.removeItem('bm_auth');
+  sessionStorage.removeItem('bm_auth');
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-userid').value='';
+  document.getElementById('login-password').value='';
+  document.getElementById('login-error').classList.remove('show');
+  setTimeout(()=>document.getElementById('login-userid').focus(),100);
+}
+
+function showApp(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('main-app').style.display='flex';
+}
+
+function checkAuth(){
+  if(localStorage.getItem('bm_auth')==='1' || sessionStorage.getItem('bm_auth')==='1'){
+    showApp();
+  } else {
+    setTimeout(()=>document.getElementById('login-userid').focus(),100);
+  }
+}
+
+// ── TABS ──────────────────────────────────────────────────
+function switchTab(t){
+  ['wa','email','contacts'].forEach(n=>{
+    document.getElementById('tab-'+n).classList.remove('active');
+    document.getElementById('panel-'+n).classList.remove('active');
+  });
+  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('panel-'+t).classList.add('active');
+  if(t==='wa')renderWAChips();
+  if(t==='email')renderEmChips();
+  if(t==='contacts')renderContacts();
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function fmtB(b){return b<1024?b+' B':b<1048576?(b/1024).toFixed(1)+' KB':(b/1048576).toFixed(1)+' MB'}
+function fmtDOB(d){if(!d)return'—';const dt=new Date(d+'T00:00:00');return dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}
+function normP(p){return(p||'').replace(/[\s\-().+]/g,'').toLowerCase()}
+function showNotif(id,msg,type){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML='<div class="notif n-'+type+'">'+esc(msg)+'</div>';
+  setTimeout(()=>{if(el)el.innerHTML=''},4000);
+}
+function dlCSV(content,fname){
+  try{
+    const blob=new Blob(['\uFEFF'+content],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=fname;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a)},300);
+  }catch(e){
+    const w=window.open('','_blank');
+    if(w)w.document.write('<pre>'+content.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre>');
+  }
+}
+function updateBadge(){
+  document.getElementById('hdr-badge').textContent=contacts.length+' contact'+(contacts.length!==1?'s':'');
+  document.getElementById('ct-counter').textContent=contacts.length;
+}
+function gbCls(g){return'gb '+({'Tours':'gb-Tours','Treks':'gb-Treks','Adventure':'gb-Adventure','Camping':'gb-Camping'}[g]||'gb-def')}
+
+// ── WA CHIPS ─────────────────────────────────────────────
+function waGF(g,btn){
+  waGrp=g;
+  document.querySelectorAll('#wa-gf .gfbtn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');renderWAChips();
+}
+function renderWAChips(){
+  const q=(document.getElementById('wa-search').value||'').toLowerCase();
+  const list=contacts.filter(c=>{
+    const mq=c.name.toLowerCase().includes(q)||c.phone.includes(q)||(c.group||'').toLowerCase().includes(q);
+    const mg=waGrp==='All'||(c.group||'')===waGrp;
+    return mq&&mg;
+  });
+  const area=document.getElementById('wa-chips');area.innerHTML='';
+  if(!list.length){area.innerHTML='<span style="font-size:12px;color:var(--muted);padding:6px">No contacts in this group.</span>';updateWACnt();return;}
+  list.forEach(c=>{
+    const el=document.createElement('span');
+    el.className='chip'+(waSel.has(c.id)?' sel':'');
+    el.innerHTML='<span class="chip-dot"></span>'+esc(c.name);
+    el.onclick=()=>{if(waSel.has(c.id)){waSel.delete(c.id);el.classList.remove('sel');}else{waSel.add(c.id);el.classList.add('sel');}updateWACnt();};
+    area.appendChild(el);
+  });updateWACnt();
+}
+function waSelAll(){
+  const q=(document.getElementById('wa-search').value||'').toLowerCase();
+  contacts.filter(c=>(waGrp==='All'||(c.group||'')===waGrp)&&(c.name.toLowerCase().includes(q)||c.phone.includes(q)||(c.group||'').toLowerCase().includes(q))).forEach(c=>waSel.add(c.id));
+  renderWAChips();
+}
+function waClear(){waSel.clear();waMan=[];renderWAManTags();renderWAChips();}
+function waAddManual(){const inp=document.getElementById('wa-manual');const v=inp.value.trim();if(!v)return;if(!waMan.includes(v)){waMan.push(v);renderWAManTags();}inp.value='';}
+function renderWAManTags(){document.getElementById('wa-manual-tags').innerHTML=waMan.map((n,i)=>'<span class="tag">'+esc(n)+'<span class="rm" onclick="waMan.splice('+i+',1);renderWAManTags();updateWACnt()">&#215;</span></span>').join('');updateWACnt();}
+function updateWACnt(){const t=waSel.size+waMan.length;document.getElementById('wa-rec-cnt').textContent=t;document.getElementById('wa-total').textContent=t;document.getElementById('wa-chip-hint').textContent=waSel.size+' selected';}
+function updateWAPrev(){const raw=document.getElementById('wa-msg').value||'Your message will appear here';document.getElementById('wa-prev-txt').textContent=raw.replace(/\{\{name\}\}/g,'[Name]');}
+function waLoadImg(e){waApplyImg(e.target.files[0]);}
+function waDrop(e){e.preventDefault();const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))waApplyImg(f);}
+function waApplyImg(file){
+  if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    waImg=ev.target.result;
+    document.getElementById('wa-img-thumb').src=waImg;
+    document.getElementById('wa-img-name').textContent=file.name;
+    document.getElementById('wa-img-size').textContent=fmtB(file.size);
+    document.getElementById('wa-img-prev').style.display='block';
+    document.getElementById('wa-drop').style.display='none';
+    document.getElementById('wa-prev-img').innerHTML='<div class="wa-bubble" style="margin-bottom:4px"><img class="wa-img-prev" src="'+waImg+'" alt=""></div>';
+  };r.readAsDataURL(file);
+}
+function waRemoveImg(){waImg=null;document.getElementById('wa-img-inp').value='';document.getElementById('wa-img-prev').style.display='none';document.getElementById('wa-drop').style.display='block';document.getElementById('wa-prev-img').innerHTML='';}
+
+function waGetList(){const l=[];waSel.forEach(id=>{const c=contacts.find(x=>x.id===id);if(c)l.push({name:c.name,phone:c.phone});});waMan.forEach(p=>l.push({name:'',phone:p}));return l;}
+function waSendAll(){
+  const list=waGetList();
+  if(!list.length){showNotif('wa-notif','Please select at least one recipient.','warn');return;}
+  const msg=document.getElementById('wa-msg').value.trim();
+  if(!msg&&!waImg){showNotif('wa-notif','Please write a message or attach an image.','warn');return;}
+  const delaySec=Math.max(10,parseInt(document.getElementById('wa-delay').value)||30);
+  waAutoRun(list,msg,delaySec*1000);
+}
+
+// ── FULLY AUTOMATIC SEND LOOP ─────────────────────────────
+let _autoList=[],_autoIdx=0,_autoMsg='',_autoDelay=30000,_autoTimer=null,_autoSent=0,_autoSkip=0,_autoRunning=false;
+
+function waAutoRun(list,msg,delay){
+  _autoList=list;_autoIdx=0;_autoMsg=msg;_autoDelay=delay;
+  _autoSent=0;_autoSkip=0;_autoRunning=true;
+  waRes=list.map(r=>({...r,status:'queued'}));
+  document.getElementById('wa-res-card').style.display='block';
+  document.getElementById('wa-res-actions').style.display='none';
+  document.getElementById('wa-auto-card').style.display='block';
+  document.getElementById('wa-send-btn').disabled=true;
+  waRenderRes(0);
+  waAutoNext();
+}
+
+function waAutoNext(){
+  if(!_autoRunning){waAutoFinish();return;}
+  if(_autoIdx>=_autoList.length){waAutoFinish();return;}
+  const r=_autoList[_autoIdx];
+  const personal=_autoMsg.replace(/\{\{name\}\}/g,r.name||r.phone);
+
+  // Update status card
+  document.getElementById('wa-auto-avatar').textContent=(r.name||r.phone).charAt(0).toUpperCase();
+  document.getElementById('wa-auto-name').textContent=r.name||r.phone;
+  document.getElementById('wa-auto-phone').textContent=r.phone;
+  document.getElementById('wa-auto-status-txt').textContent='Sending '+(_autoIdx+1)+' of '+_autoList.length+'…';
+  document.getElementById('wa-auto-sent').textContent=_autoSent;
+  document.getElementById('wa-auto-skip').textContent=_autoSkip;
+  document.getElementById('wa-auto-rem').textContent=_autoList.length-_autoIdx;
+
+  // Open WhatsApp Web — extension auto-presses Send and closes tab
+  const phone=r.phone.replace(/\D/g,'');
+  // Open as tiny off-screen popup — won't cover your screen
+  const popW=1, popH=1;
+  const popX=window.screen.width+100;  // far right, off screen
+  const popY=window.screen.height+100; // far below, off screen
+  const features='width='+popW+',height='+popH+',left='+popX+',top='+popY+',toolbar=no,menubar=no,scrollbars=no,resizable=no,location=no,status=no';
+  window.open('https://web.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(personal)+'&app_absent=0','_wa_send_'+phone,features);
+
+  // Mark sent optimistically (extension handles actual send)
+  waRes[_autoIdx].status='sent';
+  _autoSent++;
+  waRenderRes(_autoIdx+1);
+
+  // Countdown to next contact
+  let remaining=Math.floor(_autoDelay/1000);
+  document.getElementById('wa-auto-countdown').textContent=remaining+'s';
+  if(_autoTimer)clearInterval(_autoTimer);
+  _autoTimer=setInterval(()=>{
+    remaining--;
+    if(remaining<=0){
+      clearInterval(_autoTimer);
+      _autoIdx++;
+      waAutoNext();
+    } else {
+      document.getElementById('wa-auto-countdown').textContent=remaining+'s';
+    }
+  },1000);
+}
+
+function waStopAuto(){
+  _autoRunning=false;
+  if(_autoTimer)clearInterval(_autoTimer);
+  document.getElementById('wa-auto-status-txt').textContent='Stopped';
+  document.getElementById('wa-auto-countdown').textContent='—';
+  document.getElementById('wa-send-btn').disabled=false;
+  document.getElementById('wa-res-actions').style.display='flex';
+  showNotif('wa-notif','Stopped. '+_autoSent+' sent before stopping.','warn');
+}
+
+function waAutoFinish(){
+  _autoRunning=false;
+  if(_autoTimer)clearInterval(_autoTimer);
+  document.getElementById('wa-auto-status-txt').textContent='Completed!';
+  document.getElementById('wa-auto-countdown').textContent='✓';
+  document.getElementById('wa-auto-card').querySelector('.btn-danger').style.display='none';
+  document.getElementById('wa-send-btn').disabled=false;
+  document.getElementById('wa-res-actions').style.display='flex';
+  waRenderRes(_autoList.length);
+  showNotif('wa-notif','All done! '+_autoSent+' sent, '+_autoSkip+' skipped.','success');
+}
+
+function waRenderRes(done){
+  const total=waRes.length;
+  const pct=total?Math.round(done/total*100):0;
+  const sent=waRes.filter(r=>r.status==='sent').length;
+  const fail=waRes.filter(r=>r.status==='fail').length;
+  const skipped=waRes.filter(r=>r.status==='skipped').length;
+  document.getElementById('wa-prog-fill').style.width=pct+'%';
+  document.getElementById('wa-prog-pct').textContent=pct+'%';
+  document.getElementById('wa-prog-lbl').textContent=done<total?'Sending ('+done+'/'+total+')...':'Completed';
+  document.getElementById('wa-s-sent').textContent=sent;
+  document.getElementById('wa-s-fail').textContent=fail;
+  document.getElementById('wa-s-pend').textContent=Math.max(0,total-done);
+  const clsMap={sent:'sb-sent',fail:'sb-fail',queued:'sb-q',skipped:'sb-skip'};
+  const lblMap={sent:'Sent',fail:'Failed',queued:'Queued',skipped:'Skipped'};
+  const bgMap={sent:'var(--green)',fail:'#c0392b',skipped:'#b45309',queued:'#9ca3af'};
+  document.getElementById('wa-res-tbody').innerHTML=waRes.map(r=>{
+    const cls=clsMap[r.status]||'sb-q';
+    const lbl=lblMap[r.status]||r.status;
+    const bg=bgMap[r.status]||'#9ca3af';
+    return '<tr>'+
+      '<td><div class="avatar" style="background:'+bg+';width:28px;height:28px;font-size:11px">'+
+      (r.name||r.phone).charAt(0).toUpperCase()+'</div></td>'+
+      '<td style="font-weight:500">'+esc(r.name||'—')+'</td>'+
+      '<td class="mono" style="font-size:12px;color:var(--muted)">'+esc(r.phone)+'</td>'+
+      '<td><span class="sb '+cls+'">'+lbl+'</span></td>'+
+      '</tr>';
+  }).join('');
+}
+
+
+function downloadExtension(){
+  const b64='UEsDBBQAAAAIAJF+cVzY7v4zRAEAAGwCAAANAAAAbWFuaWZlc3QuanNvboWSMW/DIBCF9/yKE2OUOK26Raoqd+/UIUNVWRjONjEGBOdEVZT/XsBIaatWXZC5+969B/iyAmATN6rDQM0JfVDWsD08bFLD8Anjhh1qqGey8IpGome5d2PZfXW31CQG4ZWjUk+ardBKjCFLwRo4DJxC7RwcsAXeEXqYMATeI6gAzuO2U1qjhPYDnmc9wkvsounRV4uHQz+pkKxD9HhjxNvANsCKs+nZe+YGGw/0Ex6IXNjvdmdsq3NKwp2rhJ1266IS1hAaapZpWRTLAJe85rsiMeA/02JguU6h/iSe3GANPhbbPPm4DC0Jqri99fxsGk7pTqUV85QSKqmR5f41rkv6loux93Y2MqJLZBbQn5TA5mz9GN9u/5VKJpG6ZjEX5d2KUGLHZ00NKdK//AVQR/6EbPOddtbNLtH5oxpo0tlidV19AlBLAwQUAAAACADIgnFcWLiSe0kDAADDCAAACgAAAGNvbnRlbnQuanO1Vd1O1EAUvucpjnthW9ItC2qibBaCwgVRhLAkmBBDZqendGKZqTPTXQhu4kP4hD6JZ/qPimxCvGpnvjPn5zt/G+vra7AO53uwV1gFU5Qxavj5/Qe8U9KitDDlWuQW5ltO7rSQBoQ0IkZYpMwalucRV9cbhh7uRlEEObtCA76QPCtiIa/ACnkLKkmGhmtECbnKi9wETts+WuTWkCa656QOMsViEwLPBP9iSm/cQRlSaVMyKWSsFhG93Vjzk0JyK5QEP4C7NQCvMAjGasGtN16jC66ksVDoDCbNy0xx5t5EqcZkTDIiAf8ZiUSVw2h8r4zFC+D5c/gN2c1TJXHiBQFotIWWPTMnxx8+XB5NAcjYy9Fo3AJHe58uz/cOzxzwZjTqQyenB5fTg4/7Dtp8dQ85np5VECGv+4ixTNszcY2E7DOLkVQLPygdyZBgl7IJJCwzWF62LCXEgCP0rZU1YVBHAX55AIgVL65JQfS1QH07xYyyo7TvXcTMsqFFY0U8GTh6Bp+JoG/fHnk3K6xV8oJpwYYZm2E2GUyf+hiO0BiqsdWUmJzJyntB9HW+70ZVVdnGzuoeRXaebOGc36zypGaOzSaDzU1nuJQPXDqXf2TnUOaFfVpuKMg5alPW+JD6MqcghzN1MxRO92qcxWJ+wavmx1iQ7xlOBlYXRHk/nNHTtWlVHvDGkourqUuUsjSg/qH1YY5TZuriaUmueorIcT3TpWBcguVsIKzp9qar+tkhmAaERH1GUZD7TlfkImrGJ115XhDRWLr2gyhDeWVT2IHRn+7FytV365qz7rq5mzXutu5vF+q4F8HMyjqCtsW7GAgMnERUjtUGMViOEUXxks3JTm32EU4qjSUpjTyUMceCes3y9GBOHvoSF/Aeb2eK6bi68b7gLU1g6YVwNytmlDCz7aIIOZMcM5fB6kxy294Bkae9kKsY2wMB79x580W4SAVP6WcZtG6t7kWR/y8fluV3GcKL0eghlutFVI4fPwi7Sd8VbJWAXGVucZGCQ2d7zrJ7eerK4442JDLdSrmHwbipmtopJ96tCxj29shOu6Ie1HXf6b/pvr9daHX2m62rlb9pr6EeU1UnhO1+rGWctWXYbFq6XAauLH8BUEsDBBQAAAAIAJp+cVypSLbUwgAAAAYBAAANAAAAYmFja2dyb3VuZC5qc0VOy07DMBC8+yvm1CYScj4ABalcgROHHpGxh8RqYiOvEyGhSnwEX8iXsA2VuOxoZ+exXYfjAYelZjwzBRb8fH3j3vnTUPKSgrJljZ445nJiMV2HB/JdUEeCH5VJYk5wU1wJp/pRx0S9u1f4KQsxU8QNFGP8WPJMW5ZUo2JOT38n60J4jKJhLE0zy3AD2Z5p0d/h0wDxDRfeOl8vdX3fY7+lv2jPHrvd1WB1bTcHcG1TRmzhnFc2/yIbQ3ursrM5K/4CUEsDBBQAAAAIAJ1+cVwmfmTCqgEAAJUCAAAKAAAAcG9wdXAuaHRtbFVSQW7bMBC85xVbFz3KtqxaMSRFQNqktyIFkiDocSWuJcIUSZBUG7UokEf0hX1Jl7IdtNCB2BFndmaX1Zubu48PX7/cQh8GVV9U54NQ8DFQQGh7dJ7C1eLx4VOyWzDsw6SovgBojJjgJ+yNDskeB6mmAjxqn3hycl+CRSGk7gpI39vnEr5LEfoCNpt1rGaWlz+If2cRaI0yroC3aZqW8Ivll8IElj/R0pnVk+z6cK4abA+dM6MWzNtsb7I8Z9A4QS5xKOToC9iu35UgpLcK2Z7USmpKGmXaQwkDuk7qxB018ygZG/fZOdXJ32z/eLmANX+7CLyK7hVxiUp2OpGBBu7akg7kjnKW1c7h8vzycpf+nz6NYrOt13TL7T/9okq1Ok29Wp2WE4cfl1D1WV15ixpahd5fLXhqi5rvM1Q/XcP1GAzck+aZMDebKba+fQ6kvTQapAdsg/xGy6px9Z0lDZMZHXwY1QE+k/ekO3KA1gJqwU1kewB+A87orr4P6MKsznuOHmcU/rz8hoGp2JHn/SkFDQELBUB2M2CQLSo1LauVjYmOUdjd/Pr+AlBLAQIUAxQAAAAIAJF+cVzY7v4zRAEAAGwCAAANAAAAAAAAAAAAAACkgQAAAABtYW5pZmVzdC5qc29uUEsBAhQDFAAAAAgAyIJxXFi4kntJAwAAwwgAAAoAAAAAAAAAAAAAAKSBbwEAAGNvbnRlbnQuanNQSwECFAMUAAAACACafnFcqUi21MIAAAAGAQAADQAAAAAAAAAAAAAApIHgBAAAYmFja2dyb3VuZC5qc1BLAQIUAxQAAAAIAJ1+cVwmfmTCqgEAAJUCAAAKAAAAAAAAAAAAAACkgc0FAABwb3B1cC5odG1sUEsFBgAAAAAEAAQA5gAAAJ8HAAAAAA==';
+  const bin=atob(b64);
+  const bytes=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+  const blob=new Blob([bytes],{type:'application/zip'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='wa-extension.zip';a.style.display='none';
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);document.body.removeChild(a);},300);
+}
+
+function waExport(){dlCSV(['Name,Phone,Status',...waRes.map(r=>'"'+r.name+'","'+r.phone+'","'+r.status+'"')].join('\n'),'wa-results.csv');}
+function waReset(){document.getElementById('wa-res-card').style.display='none';waRes=[];}
+
+// ── EMAIL ─────────────────────────────────────────────────
+function emGF(g,btn){emGrp=g;document.querySelectorAll('#em-gf .gfbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderEmChips();}
+function renderEmChips(){
+  const q=(document.getElementById('em-search').value||'').toLowerCase();
+  const list=contacts.filter(c=>{if(!(c.email||'').trim())return false;const mq=c.name.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.group||'').toLowerCase().includes(q);const mg=emGrp==='All'||(c.group||'')===emGrp;return mq&&mg;});
+  const area=document.getElementById('em-chips');area.innerHTML='';
+  if(!list.length){area.innerHTML='<span style="font-size:12px;color:var(--muted);padding:6px">No contacts with email in this group.</span>';updateEmCnt();return;}
+  list.forEach(c=>{const el=document.createElement('span');el.className='chip'+(emSel.has(c.id)?' sel':'');el.innerHTML='<span class="chip-dot"></span>'+esc(c.name);el.onclick=()=>{if(emSel.has(c.id)){emSel.delete(c.id);el.classList.remove('sel');}else{emSel.add(c.id);el.classList.add('sel');}updateEmCnt();};area.appendChild(el);});updateEmCnt();
+}
+function emSelAll(){const q=(document.getElementById('em-search').value||'').toLowerCase();contacts.filter(c=>{if(!(c.email||'').trim())return false;const mq=c.name.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.group||'').toLowerCase().includes(q);const mg=emGrp==='All'||(c.group||'')===emGrp;return mq&&mg;}).forEach(c=>emSel.add(c.id));renderEmChips();}
+function emClear(){emSel.clear();emMan=[];renderEmManTags();renderEmChips();}
+function emAddManual(){const inp=document.getElementById('em-manual');const v=inp.value.trim();if(!v||!v.includes('@'))return;if(!emMan.includes(v)){emMan.push(v);renderEmManTags();}inp.value='';}
+function renderEmManTags(){document.getElementById('em-manual-tags').innerHTML=emMan.map((e,i)=>'<span class="tag">'+esc(e)+'<span class="rm" onclick="emMan.splice('+i+',1);renderEmManTags();updateEmCnt()">&#215;</span></span>').join('');updateEmCnt();}
+function updateEmCnt(){const t=emSel.size+emMan.length;document.getElementById('em-rec-cnt').textContent=t;document.getElementById('em-total').textContent=t;document.getElementById('em-chip-hint').textContent=emSel.size+' selected';updateEmPrev();}
+function rte(cmd,val){document.getElementById('em-body').focus();document.execCommand(cmd,false,val||null);updateEmPrev();}
+function rteLink(){const url=prompt('Enter URL:','https://');if(url){document.execCommand('createLink',false,url);updateEmPrev();}}
+function updateEmPrev(){
+  const subj=document.getElementById('em-subject').value||'—';
+  const body=document.getElementById('em-body').innerHTML||'';
+  const t=emSel.size+emMan.length;
+  document.getElementById('ep-to').textContent=t?t+' recipient'+(t!==1?'s':''):'—';
+  document.getElementById('ep-subject').textContent=subj;
+  const pb=document.getElementById('ep-body');
+  if(body.trim()){pb.innerHTML=body.replace(/\{\{name\}\}/g,'<strong>[Name]</strong>');}
+  else{pb.innerHTML='<span style="color:var(--muted);font-size:12px">Your email body will appear here…</span>';}
+}
+function emSetAttach(e){emApplyAtt(e.target.files[0]);}
+function emDrop(e){e.preventDefault();emApplyAtt(e.dataTransfer.files[0]);}
+function emApplyAtt(file){if(!file)return;emAtt=file;document.getElementById('em-att-name').textContent=file.name;document.getElementById('em-att-size').textContent=fmtB(file.size);document.getElementById('em-attach-info').style.display='block';document.getElementById('em-drop').style.display='none';document.getElementById('ep-att-name').textContent=file.name;document.getElementById('ep-attach').style.display='block';}
+function emRemoveAttach(){emAtt=null;document.getElementById('em-file-inp').value='';document.getElementById('em-attach-info').style.display='none';document.getElementById('em-drop').style.display='block';document.getElementById('ep-attach').style.display='none';}
+function updateEmHint(){document.getElementById('em-hint').textContent={'sim':'Simulation mode: no real emails sent.','mailto':'Opens your default email client for each recipient.'}[document.getElementById('em-mode').value]||'';}
+function emGetList(){const l=[];emSel.forEach(id=>{const c=contacts.find(x=>x.id===id);if(c&&c.email)l.push({name:c.name,email:c.email});});emMan.forEach(e=>l.push({name:'',email:e}));return l;}
+function emSendAll(){
+  const list=emGetList();
+  if(!list.length){showNotif('em-notif','Please select at least one recipient with email.','warn');return;}
+  const subj=document.getElementById('em-subject').value.trim();
+  const body=document.getElementById('em-body').innerText.trim();
+  if(!subj){showNotif('em-notif','Please enter a subject.','warn');document.getElementById('em-subject').focus();return;}
+  if(!body){showNotif('em-notif','Please write an email body.','warn');document.getElementById('em-body').focus();return;}
+  const mode=document.getElementById('em-mode').value;
+  const delay=Math.max(200,parseInt(document.getElementById('em-delay').value)||800);
+  if(mode==='mailto'){emSendMailto(list,subj,body,delay);return;}
+  emRunSim(list,delay);
+}
+function emSendMailto(list,subj,body,delay){
+  let i=0;showNotif('em-notif','Opening '+list.length+' email draft(s)… Allow pop-ups.','info');
+  function next(){if(i>=list.length){showNotif('em-notif','Done! Opened '+list.length+' draft(s).','success');return;}const r=list[i];const pb=body.replace(/\{\{name\}\}/g,r.name||r.email);const ps=subj.replace(/\{\{name\}\}/g,r.name||r.email);window.open('mailto:'+r.email+'?subject='+encodeURIComponent(ps)+'&body='+encodeURIComponent(pb),'_blank');i++;setTimeout(next,delay);}next();
+}
+function emRunSim(list,delay){
+  emRes=list.map(r=>({...r,status:'queued'}));
+  document.getElementById('em-res-card').style.display='block';
+  document.getElementById('em-res-actions').style.display='none';
+  document.getElementById('em-send-btn').disabled=true;
+  let i=0;emRenderRes(0);
+  const iv=setInterval(()=>{
+    if(i>=emRes.length){clearInterval(iv);document.getElementById('em-send-btn').disabled=false;document.getElementById('em-prog-lbl').textContent='Completed';document.getElementById('em-res-actions').style.display='flex';const s=emRes.filter(r=>r.status==='sent').length,f=emRes.filter(r=>r.status==='fail').length;showNotif('em-notif','Done! '+s+' sent, '+f+' failed.','success');return;}
+    emRes[i].status=Math.random()>.07?'sent':'fail';emRenderRes(i+1);i++;
+  },delay);
+}
+function emRenderRes(done){
+  const total=emRes.length,pct=total?Math.round(done/total*100):0;
+  const sent=emRes.filter(r=>r.status==='sent').length,fail=emRes.filter(r=>r.status==='fail').length;
+  document.getElementById('em-prog-fill').style.width=pct+'%';document.getElementById('em-prog-pct').textContent=pct+'%';document.getElementById('em-prog-lbl').textContent=done<total?'Sending ('+done+'/'+total+')…':'Completed';
+  document.getElementById('em-s-sent').textContent=sent;document.getElementById('em-s-fail').textContent=fail;document.getElementById('em-s-pend').textContent=Math.max(0,total-done);
+  document.getElementById('em-res-tbody').innerHTML=emRes.map(r=>{const cls={sent:'sb-sent',fail:'sb-fail',queued:'sb-q'}[r.status];const lbl={sent:'Sent',fail:'Failed',queued:'Queued'}[r.status];const bg=r.status==='sent'?'#166534':r.status==='fail'?'#c0392b':'#9ca3af';return'<tr><td><div class="avatar" style="background:'+bg+';width:28px;height:28px;font-size:11px">'+(r.name||r.email).charAt(0).toUpperCase()+'</div></td><td style="font-weight:500">'+esc(r.name||'—')+'</td><td style="font-size:12px;color:var(--muted)">'+esc(r.email)+'</td><td><span class="sb '+cls+'">'+lbl+'</span></td></tr>';}).join('');
+}
+function emExport(){dlCSV(['Name,Email,Status',...emRes.map(r=>'"'+r.name+'","'+r.email+'","'+r.status+'"')].join('\n'),'email-results.csv');}
+function emReset(){document.getElementById('em-res-card').style.display='none';emRes=[];}
+
+// ── CONTACTS ─────────────────────────────────────────────
+function renderContacts(){
+  const q=(document.getElementById('ct-search').value||'').toLowerCase();
+  const f=contacts.filter(c=>c.name.toLowerCase().includes(q)||c.phone.includes(q)||(c.email||'').toLowerCase().includes(q)||(c.group||'').toLowerCase().includes(q));
+  const tbody=document.getElementById('ct-tbody');
+  const empty=document.getElementById('ct-empty');
+  if(!f.length){tbody.innerHTML='';empty.style.display='block';updateBadge();return;}
+  empty.style.display='none';
+  tbody.innerHTML=f.map(c=>'<tr>'+
+    '<td><div class="avatar" style="width:32px;height:32px;font-size:12px">'+c.name.charAt(0).toUpperCase()+'</div></td>'+
+    '<td style="font-weight:500">'+esc(c.name)+'</td>'+
+    '<td class="mono" style="font-size:12px;color:var(--muted)">'+esc(c.phone)+'</td>'+
+    '<td style="font-size:12px">'+(c.email?'<a href="mailto:'+esc(c.email)+'" style="color:var(--green-dark);text-decoration:none">'+esc(c.email)+'</a>':'<span style="color:var(--muted)">—</span>')+'</td>'+
+    '<td style="font-size:12px;color:var(--muted)">'+fmtDOB(c.dob)+'</td>'+
+    '<td>'+(c.group?'<span class="'+gbCls(c.group)+'">'+esc(c.group)+'</span>':'<span style="color:var(--muted);font-size:12px">—</span>')+'</td>'+
+    '<td style="text-align:right"><div class="flex gap-8" style="justify-content:flex-end">'+
+    '<button class="btn btn-ghost btn-xs" onclick="openModal('+c.id+')">Edit</button>'+
+    '<button class="btn btn-danger btn-xs" onclick="openDel('+c.id+')">Delete</button>'+
+    '</div></td></tr>'
+  ).join('');
+  updateBadge();
+}
+
+function openModal(id){
+  editId=id||null;
+  document.getElementById('modal-title').textContent=id?'Edit Contact':'Add Contact';
+  const c=id?contacts.find(x=>x.id===id):{name:'',phone:'',email:'',dob:'',group:''};
+  document.getElementById('m-name').value=c.name;
+  document.getElementById('m-phone').value=c.phone;
+  document.getElementById('m-email').value=c.email||'';
+  document.getElementById('m-dob').value=c.dob||'';
+  document.getElementById('m-group').value=c.group||'';
+  document.getElementById('ct-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('m-name').focus(),80);
+}
+function closeModal(){document.getElementById('ct-modal').classList.remove('open');}
+function saveContact(){
+  const name=document.getElementById('m-name').value.trim();
+  const phone=document.getElementById('m-phone').value.trim();
+  const email=document.getElementById('m-email').value.trim();
+  const dob=document.getElementById('m-dob').value;
+  const group=document.getElementById('m-group').value;
+  if(!name){document.getElementById('m-name').focus();return;}
+  if(!phone){document.getElementById('m-phone').focus();return;}
+  const np=normP(phone);
+  const dup=contacts.find(c=>normP(c.phone)===np&&c.id!==editId);
+  if(dup){showNotif('ct-notif','Phone already exists for "'+dup.name+'".','warn');document.getElementById('m-phone').focus();return;}
+  if(editId){const c=contacts.find(x=>x.id===editId);if(c){c.name=name;c.phone=phone;c.email=email;c.dob=dob;c.group=group;}}
+  else{contacts.push({id:nid++,name,phone,email,dob,group});}
+  closeModal();renderContacts();renderWAChips();renderEmChips();
+  showNotif('ct-notif',editId?'Contact updated.':'Contact added.','success');
+}
+
+function openDel(id){delId=id;const c=contacts.find(x=>x.id===id);document.getElementById('del-name').textContent=c?c.name:'this contact';document.getElementById('del-modal').classList.add('open');}
+function cancelDel(){delId=null;document.getElementById('del-modal').classList.remove('open');}
+function confirmDel(){
+  if(delId==null)return;
+  contacts=contacts.filter(c=>c.id!==delId);
+  waSel.delete(delId);emSel.delete(delId);delId=null;
+  document.getElementById('del-modal').classList.remove('open');
+  renderContacts();renderWAChips();renderEmChips();
+  showNotif('ct-notif','Contact deleted.','success');
+}
+
+
+// ── GOOGLE SHEET SYNC ──────────────────────────────────────
+let gsUrl = localStorage.getItem('gs_webapp_url') || '';
+
+function gsUpdateStatusBar(){
+  const bar=document.getElementById('gs-status-bar');
+  const text=document.getElementById('gs-status-text');
+  const loadBtn=document.getElementById('gs-load-btn');
+  const pushBtn=document.getElementById('gs-push-btn');
+  const connectBtn=document.getElementById('gs-connect-btn');
+  const disconnectBtn=document.getElementById('gs-disconnect-btn');
+  if(gsUrl){
+    bar.style.background='#f0fdf4';bar.style.borderColor='#bbf7d0';
+    text.textContent='Connected to Google Sheet';
+    text.style.color='#166534';
+    loadBtn.style.display='inline-flex';
+    pushBtn.style.display='inline-flex';
+    connectBtn.style.display='none';
+    disconnectBtn.style.display='inline-flex';
+  } else {
+    bar.style.background='#fef9c3';bar.style.borderColor='#fde68a';
+    text.textContent='Not connected to Google Sheet';
+    text.style.color='#92400e';
+    loadBtn.style.display='none';
+    pushBtn.style.display='none';
+    connectBtn.style.display='inline-flex';
+    disconnectBtn.style.display='none';
+  }
+}
+
+function copyGsCode(btn){
+  const code=document.getElementById('gs-code-block').innerText;
+  navigator.clipboard.writeText(code).then(()=>{
+    btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000);
+  }).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=code;ta.style.position='fixed';ta.style.opacity='0';
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+    btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',2000);
+  });
+}
+
+async function gsConnect(){
+  const url=document.getElementById('gs-url-input').value.trim();
+  const status=document.getElementById('gs-connect-status');
+  if(!url||!url.includes('script.google.com')){
+    status.textContent='⚠️ Please paste a valid Web App URL (script.google.com/macros/...)';
+    status.style.color='#92400e';return;
+  }
+  status.textContent='Testing connection…';status.style.color='var(--muted)';
+  try{
+    const resp=await fetch(url);
+    const data=await resp.json();
+    if(data.success){
+      gsUrl=url;
+      localStorage.setItem('gs_webapp_url',url);
+      status.textContent='✅ Connected! Found '+(data.contacts?data.contacts.length:0)+' contact(s) in sheet.';
+      status.style.color='#166534';
+      gsUpdateStatusBar();
+checkAuth();
+      setTimeout(()=>{document.getElementById('gs-modal').classList.remove('open');},1200);
+    } else {
+      status.textContent='❌ '+(data.error||'Connection failed. Check your deployment settings.');
+      status.style.color='#c0392b';
+    }
+  }catch(err){
+    status.textContent='❌ Could not reach the script. Check the URL and that access is set to "Anyone".';
+    status.style.color='#c0392b';
+  }
+}
+
+function gsDisconnect(){
+  gsUrl='';
+  localStorage.removeItem('gs_webapp_url');
+  gsUpdateStatusBar();
+checkAuth();
+  showNotif('ct-notif','Disconnected from Google Sheet.','info');
+}
+
+async function gsLoad(){
+  if(!gsUrl)return;
+  showNotif('ct-notif','Loading contacts from Sheet…','info');
+  try{
+    const resp=await fetch(gsUrl);
+    const data=await resp.json();
+    if(!data.success){showNotif('ct-notif','Failed to load: '+(data.error||'unknown error'),'warn');return;}
+    const sheetContacts=data.contacts||[];
+    let added=0,skipped=0;
+    const seen=new Set(contacts.map(c=>normP(c.phone)));
+    sheetContacts.forEach(sc=>{
+      if(!sc.name||!sc.phone){skipped++;return;}
+      const np=normP(sc.phone);
+      if(seen.has(np)){skipped++;return;}
+      seen.add(np);
+      contacts.push({id:nid++,name:sc.name,phone:sc.phone,email:sc.email||'',dob:sc.dob||'',group:sc.group||''});
+      added++;
+    });
+    renderContacts();renderWAChips();renderEmChips();
+    showNotif('ct-notif','Loaded '+added+' new contact(s) from Sheet. '+skipped+' already existed.','success');
+  }catch(err){
+    showNotif('ct-notif','Error loading from Sheet: '+err.message,'warn');
+  }
+}
+
+async function gsPush(){
+  if(!gsUrl)return;
+  showNotif('ct-notif','Pushing '+contacts.length+' contact(s) to Sheet…','info');
+  try{
+    const resp=await fetch(gsUrl,{
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify({type:'sync_all',contacts:contacts})
+    });
+    const data=await resp.json();
+    if(data.success){
+      showNotif('ct-notif','Pushed '+(data.count!==undefined?data.count:contacts.length)+' contact(s) to Sheet successfully.','success');
+    } else {
+      showNotif('ct-notif','Push failed: '+(data.error||'unknown error'),'warn');
+    }
+  }catch(err){
+    showNotif('ct-notif','Error pushing to Sheet: '+err.message,'warn');
+  }
+}
+
+function importCSV(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const lines=ev.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
+    let s=0;if(lines[0]&&lines[0].toLowerCase().replace(/\s/g,'').startsWith('name'))s=1;
+    let added=0,skipped=0;const seen=new Set();
+    lines.slice(s).forEach(line=>{
+      const p=line.split(',');
+      const name=(p[0]||'').trim().replace(/^"|"$/g,'');
+      const phone=(p[1]||'').trim().replace(/^"|"$/g,'');
+      const email=(p[2]||'').trim().replace(/^"|"$/g,'');
+      const dob=(p[3]||'').trim().replace(/^"|"$/g,'');
+      const group=(p[4]||'').trim().replace(/^"|"$/g,'');
+      if(!name||!phone){skipped++;return;}
+      const np=normP(phone);
+      if(contacts.some(c=>normP(c.phone)===np)||seen.has(np)){skipped++;return;}
+      seen.add(np);contacts.push({id:nid++,name,phone,email,dob,group});added++;
+    });
+    renderContacts();renderWAChips();renderEmChips();
+    let msg='Imported '+added+' contact'+(added!==1?'s':'')+'.';
+    if(skipped>0)msg+=' '+skipped+' duplicate'+(skipped!==1?'s':'')+' skipped.';
+    showNotif('ct-notif',msg,skipped>0?'warn':'success');
+  };r.readAsText(file);e.target.value='';
+}
+function exportCSV(){
+  if(!contacts.length){showNotif('ct-notif','No contacts to export.','warn');return;}
+  dlCSV(['Name,Phone,Email,DOB,Group',...contacts.map(c=>'"'+c.name+'","'+c.phone+'","'+(c.email||'')+'","'+(c.dob||'')+'","'+(c.group||'')+'"')].join('\n'),'contacts.csv');
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModal();cancelDel();}
+  if(e.key==='Enter'&&document.getElementById('ct-modal').classList.contains('open'))saveContact();
+});
+
+
+
+
+// ── INIT ──────────────────────────────────────────────────
+renderWAChips();
+renderEmChips();
+renderContacts();
+updateBadge();
+updateWACnt();
+updateEmCnt();
+gsUpdateStatusBar();
+checkAuth();
+updateWAPrev();
+</script>
+</body>
+</html>
