@@ -458,26 +458,11 @@ tbody tr:hover td{background:#f9fbf9}
       <div>
         <div class="card">
           <div class="card-title"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Recipients<span class="counter" id="em-rec-cnt">0</span></div>
-          <label>Filter by group</label>
-          <div class="gf-wrap" id="em-gf">
-            <button class="gfbtn act" data-g="All" onclick="emGF('All',this)">All</button>
-            <button class="gfbtn" data-g="Tours" onclick="emGF('Tours',this)">Tours</button>
-            <button class="gfbtn" data-g="Treks" onclick="emGF('Treks',this)">Treks</button>
-            <button class="gfbtn" data-g="Adventure" onclick="emGF('Adventure',this)">Adventure</button>
-            <button class="gfbtn" data-g="Camping" onclick="emGF('Camping',this)">Camping</button>
+
+          <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:var(--rs);padding:10px 12px;margin-bottom:12px;font-size:12px;color:#92400e;line-height:1.55">
+            Contacts no longer store email addresses — add recipients manually below.
           </div>
-          <label>Search contacts</label>
-          <div class="sw" style="margin-bottom:8px">
-            <svg class="sw-ic" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input type="search" id="em-search" placeholder="Search contacts with email…" oninput="renderEmChips()">
-          </div>
-          <div class="chip-area" id="em-chips"></div>
-          <div class="flex gap-8 mt-8" style="flex-wrap:wrap">
-            <button class="btn btn-secondary btn-xs" onclick="emSelAll()">Select all</button>
-            <button class="btn btn-ghost btn-xs" onclick="emClear()">Clear all</button>
-            <span class="ml-auto" style="font-size:11px;color:var(--muted)" id="em-chip-hint">0 selected</span>
-          </div>
-          <div class="divider"></div>
+
           <label>Add email manually</label>
           <div class="flex gap-8">
             <input type="text" id="em-manual" placeholder="someone@example.com" style="flex:1" onkeydown="if(event.key==='Enter')emAddManual()">
@@ -619,11 +604,9 @@ tbody tr:hover td{background:#f9fbf9}
         <thead>
           <tr>
             <th style="width:44px"></th>
-            <th style="width:160px">Name</th>
-            <th style="width:150px">Phone</th>
-            <th style="width:180px">Email</th>
-            <th style="width:110px">DOB</th>
-            <th style="width:110px">Group</th>
+            <th style="width:220px">Name</th>
+            <th style="width:200px">Phone</th>
+            <th style="width:150px">Group</th>
             <th style="width:120px;text-align:right">Actions</th>
           </tr>
         </thead>
@@ -632,7 +615,7 @@ tbody tr:hover td{background:#f9fbf9}
       <div class="empty" id="ct-empty" style="display:none">
         <svg width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         <p>No contacts found. Add one or import a CSV file.</p>
-        <p style="margin-top:6px;font-size:11px">CSV columns: <code class="tc">Name, Phone, Email, DOB, Group</code></p>
+        <p style="margin-top:6px;font-size:11px">CSV columns: <code class="tc">Name, Phone, Group</code></p>
       </div>
     </div>
   </div>
@@ -777,7 +760,7 @@ tbody tr:hover td{background:#f9fbf9}
       <div style="display:flex;gap:12px;align-items:flex-start">
         <div style="width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:12px;flex-shrink:0">1</div>
         <div style="font-size:12px;color:var(--muted);line-height:1.6">
-          Open or create a <a href="https://sheets.new" target="_blank" style="color:var(--green-dark)">Google Sheet</a>. Add headers in row 1: <code class="tc">Name</code>, <code class="tc">Phone</code>, <code class="tc">Email</code>, <code class="tc">DOB</code>, <code class="tc">Group</code>
+          Open or create a <a href="https://sheets.new" target="_blank" style="color:var(--green-dark)">Google Sheet</a>. Add headers in row 1: <code class="tc">Name</code>, <code class="tc">Phone</code>, <code class="tc">Group</code>
         </div>
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start">
@@ -815,7 +798,7 @@ tbody tr:hover td{background:#f9fbf9}
  *
  * SETUP:
  * 1. Open your Google Sheet (or create a new one)
- * 2. First row should have headers: Name | Phone | Email | DOB | Group
+ * 2. First row should have headers: Name | Phone | Group
  * 3. Extensions menu → Apps Script
  * 4. Delete any starter code, paste this entire file
  * 5. Click Deploy → New deployment → type: Web app
@@ -854,8 +837,6 @@ function doGet(e) {
     const idx = {
       name:  headers.indexOf('name'),
       phone: headers.indexOf('phone'),
-      email: headers.indexOf('email'),
-      dob:   headers.indexOf('dob'),
       group: headers.indexOf('group'),
     };
 
@@ -869,8 +850,6 @@ function doGet(e) {
       contacts.push({
         name:  String(name || ''),
         phone: String(phone || ''),
-        email: idx.email &gt;= 0 ? String(row[idx.email] || '') : '',
-        dob:   idx.dob   &gt;= 0 ? formatDob_(row[idx.dob]) : '',
         group: idx.group &gt;= 0 ? String(row[idx.group] || '') : '',
       });
     }
@@ -879,14 +858,6 @@ function doGet(e) {
   } catch (err) {
     return jsonOut_({ success: false, error: err.message });
   }
-}
-
-function formatDob_(val) {
-  if (!val) return '';
-  if (val instanceof Date) {
-    return Utilities.formatDate(val, Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  }
-  return String(val);
 }
 
 /**
@@ -905,19 +876,19 @@ function doPost(e) {
 
     if (body.type === 'sync_all') {
       sheet.clear();
-      sheet.appendRow(['Name', 'Phone', 'Email', 'DOB', 'Group']);
+      sheet.appendRow(['Name', 'Phone', 'Group']);
       const rows = (body.contacts || []).map(c =&gt; [
-        c.name || '', c.phone || '', c.email || '', c.dob || '', c.group || ''
+        c.name || '', c.phone || '', c.group || ''
       ]);
       if (rows.length &gt; 0) {
-        sheet.getRange(2, 1, rows.length, 5).setValues(rows);
+        sheet.getRange(2, 1, rows.length, 3).setValues(rows);
       }
       return jsonOut_({ success: true, count: rows.length });
     }
 
     if (body.type === 'add') {
       const c = body.contact || {};
-      sheet.appendRow([c.name || '', c.phone || '', c.email || '', c.dob || '', c.group || '']);
+      sheet.appendRow([c.name || '', c.phone || '', c.group || '']);
       return jsonOut_({ success: true });
     }
 
@@ -964,10 +935,8 @@ function doPost(e) {
     </div>
     <div class="modal-grid">
       <div class="full"><label>Full Name <span style="color:#c0392b">*</span></label><input type="text" id="m-name" placeholder="e.g. Priya Sharma"></div>
-      <div><label>Phone <span style="color:#c0392b">*</span></label><input type="tel" id="m-phone" placeholder="+91 98765 43210"><p class="hint">Include country code</p></div>
-      <div><label>Email</label><input type="text" id="m-email" placeholder="priya@example.com"></div>
-      <div><label>Date of Birth</label><input type="date" id="m-dob"></div>
-      <div><label>Group</label>
+      <div class="full"><label>Phone <span style="color:#c0392b">*</span></label><input type="tel" id="m-phone" placeholder="+91 98765 43210"><p class="hint">Include country code</p></div>
+      <div class="full"><label>Group</label>
         <select id="m-group">
           <option value="">— Select group —</option>
           <option value="Tours">Tours</option>
@@ -1002,12 +971,12 @@ function doPost(e) {
 <script>
 // ── STATE ─────────────────────────────────────────────────
 let contacts=[
-  {id:1,name:'Priya Sharma', phone:'+91 98765 43210',email:'priya@example.com',      dob:'1992-04-15',group:'Tours'},
-  {id:2,name:'Rahul Verma',  phone:'+91 87654 32109',email:'rahul.v@gmail.com',       dob:'1988-11-03',group:'Treks'},
-  {id:3,name:'Anita Patel',  phone:'+91 76543 21098',email:'anita.patel@mail.com',    dob:'1995-07-22',group:'Adventure'},
-  {id:4,name:'Suresh Kumar', phone:'+91 65432 10987',email:'suresh.k@outlook.com',    dob:'1985-01-30',group:'Camping'},
-  {id:5,name:'Meera Nair',   phone:'+91 54321 09876',email:'meera.n@example.com',     dob:'1993-09-08',group:'Tours'},
-  {id:6,name:'Vivek Singh',  phone:'+91 43210 98765',email:'vivek.s@gmail.com',       dob:'1990-03-17',group:'Treks'},
+  {id:1,name:'Priya Sharma', phone:'+91 98765 43210',group:'Tours'},
+  {id:2,name:'Rahul Verma',  phone:'+91 87654 32109',group:'Treks'},
+  {id:3,name:'Anita Patel',  phone:'+91 76543 21098',group:'Adventure'},
+  {id:4,name:'Suresh Kumar', phone:'+91 65432 10987',group:'Camping'},
+  {id:5,name:'Meera Nair',   phone:'+91 54321 09876',group:'Tours'},
+  {id:6,name:'Vivek Singh',  phone:'+91 43210 98765',group:'Treks'},
 ];
 let nid=7;
 let waSel=new Set(),waMan=[],waImg=null,waGrp='All',waRes=[];
@@ -1293,25 +1262,22 @@ function waExport(){dlCSV(['Name,Phone,Status',...waRes.map(r=>'"'+r.name+'","'+
 function waReset(){document.getElementById('wa-res-card').style.display='none';waRes=[];}
 
 // ── EMAIL ─────────────────────────────────────────────────
-function emGF(g,btn){emGrp=g;document.querySelectorAll('#em-gf .gfbtn').forEach(b=>b.classList.remove('act'));btn.classList.add('act');renderEmChips();}
+function emGF(g,btn){emGrp=g;}
 function renderEmChips(){
-  const q=(document.getElementById('em-search').value||'').toLowerCase();
-  const list=contacts.filter(c=>{if(!(c.email||'').trim())return false;const mq=c.name.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.group||'').toLowerCase().includes(q);const mg=emGrp==='All'||(c.group||'')===emGrp;return mq&&mg;});
-  const area=document.getElementById('em-chips');area.innerHTML='';
-  if(!list.length){area.innerHTML='<span style="font-size:12px;color:var(--muted);padding:6px">No contacts with email in this group.</span>';updateEmCnt();return;}
-  list.forEach(c=>{const el=document.createElement('span');el.className='chip'+(emSel.has(c.id)?' sel':'');el.innerHTML='<span class="chip-dot"></span>'+esc(c.name);el.onclick=()=>{if(emSel.has(c.id)){emSel.delete(c.id);el.classList.remove('sel');}else{emSel.add(c.id);el.classList.add('sel');}updateEmCnt();};area.appendChild(el);});updateEmCnt();
+  // Contact email picker removed — recipients are now manual-entry only
+  updateEmCnt();
 }
-function emSelAll(){const q=(document.getElementById('em-search').value||'').toLowerCase();contacts.filter(c=>{if(!(c.email||'').trim())return false;const mq=c.name.toLowerCase().includes(q)||(c.email||'').toLowerCase().includes(q)||(c.group||'').toLowerCase().includes(q);const mg=emGrp==='All'||(c.group||'')===emGrp;return mq&&mg;}).forEach(c=>emSel.add(c.id));renderEmChips();}
-function emClear(){emSel.clear();emMan=[];renderEmManTags();renderEmChips();}
+function emSelAll(){}
+function emClear(){emMan=[];renderEmManTags();}
 function emAddManual(){const inp=document.getElementById('em-manual');const v=inp.value.trim();if(!v||!v.includes('@'))return;if(!emMan.includes(v)){emMan.push(v);renderEmManTags();}inp.value='';}
 function renderEmManTags(){document.getElementById('em-manual-tags').innerHTML=emMan.map((e,i)=>'<span class="tag">'+esc(e)+'<span class="rm" onclick="emMan.splice('+i+',1);renderEmManTags();updateEmCnt()">&#215;</span></span>').join('');updateEmCnt();}
-function updateEmCnt(){const t=emSel.size+emMan.length;document.getElementById('em-rec-cnt').textContent=t;document.getElementById('em-total').textContent=t;document.getElementById('em-chip-hint').textContent=emSel.size+' selected';updateEmPrev();}
+function updateEmCnt(){const t=emMan.length;document.getElementById('em-rec-cnt').textContent=t;document.getElementById('em-total').textContent=t;updateEmPrev();}
 function rte(cmd,val){document.getElementById('em-body').focus();document.execCommand(cmd,false,val||null);updateEmPrev();}
 function rteLink(){const url=prompt('Enter URL:','https://');if(url){document.execCommand('createLink',false,url);updateEmPrev();}}
 function updateEmPrev(){
   const subj=document.getElementById('em-subject').value||'—';
   const body=document.getElementById('em-body').innerHTML||'';
-  const t=emSel.size+emMan.length;
+  const t=emMan.length;
   document.getElementById('ep-to').textContent=t?t+' recipient'+(t!==1?'s':''):'—';
   document.getElementById('ep-subject').textContent=subj;
   const pb=document.getElementById('ep-body');
@@ -1323,7 +1289,7 @@ function emDrop(e){e.preventDefault();emApplyAtt(e.dataTransfer.files[0]);}
 function emApplyAtt(file){if(!file)return;emAtt=file;document.getElementById('em-att-name').textContent=file.name;document.getElementById('em-att-size').textContent=fmtB(file.size);document.getElementById('em-attach-info').style.display='block';document.getElementById('em-drop').style.display='none';document.getElementById('ep-att-name').textContent=file.name;document.getElementById('ep-attach').style.display='block';}
 function emRemoveAttach(){emAtt=null;document.getElementById('em-file-inp').value='';document.getElementById('em-attach-info').style.display='none';document.getElementById('em-drop').style.display='block';document.getElementById('ep-attach').style.display='none';}
 function updateEmHint(){document.getElementById('em-hint').textContent={'sim':'Simulation mode: no real emails sent.','mailto':'Opens your default email client for each recipient.'}[document.getElementById('em-mode').value]||'';}
-function emGetList(){const l=[];emSel.forEach(id=>{const c=contacts.find(x=>x.id===id);if(c&&c.email)l.push({name:c.name,email:c.email});});emMan.forEach(e=>l.push({name:'',email:e}));return l;}
+function emGetList(){const l=[];emMan.forEach(e=>l.push({name:'',email:e}));return l;}
 function emSendAll(){
   const list=emGetList();
   if(!list.length){showNotif('em-notif','Please select at least one recipient with email.','warn');return;}
@@ -1364,7 +1330,7 @@ function emReset(){document.getElementById('em-res-card').style.display='none';e
 // ── CONTACTS ─────────────────────────────────────────────
 function renderContacts(){
   const q=(document.getElementById('ct-search').value||'').toLowerCase();
-  const f=contacts.filter(c=>c.name.toLowerCase().includes(q)||c.phone.includes(q)||(c.email||'').toLowerCase().includes(q)||(c.group||'').toLowerCase().includes(q));
+  const f=contacts.filter(c=>c.name.toLowerCase().includes(q)||c.phone.includes(q)||(c.group||'').toLowerCase().includes(q));
   const tbody=document.getElementById('ct-tbody');
   const empty=document.getElementById('ct-empty');
   if(!f.length){tbody.innerHTML='';empty.style.display='block';updateBadge();return;}
@@ -1373,8 +1339,6 @@ function renderContacts(){
     '<td><div class="avatar" style="width:32px;height:32px;font-size:12px">'+c.name.charAt(0).toUpperCase()+'</div></td>'+
     '<td style="font-weight:500">'+esc(c.name)+'</td>'+
     '<td class="mono" style="font-size:12px;color:var(--muted)">'+esc(c.phone)+'</td>'+
-    '<td style="font-size:12px">'+(c.email?'<a href="mailto:'+esc(c.email)+'" style="color:var(--green-dark);text-decoration:none">'+esc(c.email)+'</a>':'<span style="color:var(--muted)">—</span>')+'</td>'+
-    '<td style="font-size:12px;color:var(--muted)">'+fmtDOB(c.dob)+'</td>'+
     '<td>'+(c.group?'<span class="'+gbCls(c.group)+'">'+esc(c.group)+'</span>':'<span style="color:var(--muted);font-size:12px">—</span>')+'</td>'+
     '<td style="text-align:right"><div class="flex gap-8" style="justify-content:flex-end">'+
     '<button class="btn btn-ghost btn-xs" onclick="openModal('+c.id+')">Edit</button>'+
@@ -1387,11 +1351,9 @@ function renderContacts(){
 function openModal(id){
   editId=id||null;
   document.getElementById('modal-title').textContent=id?'Edit Contact':'Add Contact';
-  const c=id?contacts.find(x=>x.id===id):{name:'',phone:'',email:'',dob:'',group:''};
+  const c=id?contacts.find(x=>x.id===id):{name:'',phone:'',group:''};
   document.getElementById('m-name').value=c.name;
   document.getElementById('m-phone').value=c.phone;
-  document.getElementById('m-email').value=c.email||'';
-  document.getElementById('m-dob').value=c.dob||'';
   document.getElementById('m-group').value=c.group||'';
   document.getElementById('ct-modal').classList.add('open');
   setTimeout(()=>document.getElementById('m-name').focus(),80);
@@ -1400,16 +1362,14 @@ function closeModal(){document.getElementById('ct-modal').classList.remove('open
 function saveContact(){
   const name=document.getElementById('m-name').value.trim();
   const phone=document.getElementById('m-phone').value.trim();
-  const email=document.getElementById('m-email').value.trim();
-  const dob=document.getElementById('m-dob').value;
   const group=document.getElementById('m-group').value;
   if(!name){document.getElementById('m-name').focus();return;}
   if(!phone){document.getElementById('m-phone').focus();return;}
   const np=normP(phone);
   const dup=contacts.find(c=>normP(c.phone)===np&&c.id!==editId);
   if(dup){showNotif('ct-notif','Phone already exists for "'+dup.name+'".','warn');document.getElementById('m-phone').focus();return;}
-  if(editId){const c=contacts.find(x=>x.id===editId);if(c){c.name=name;c.phone=phone;c.email=email;c.dob=dob;c.group=group;}}
-  else{contacts.push({id:nid++,name,phone,email,dob,group});}
+  if(editId){const c=contacts.find(x=>x.id===editId);if(c){c.name=name;c.phone=phone;c.group=group;}}
+  else{contacts.push({id:nid++,name,phone,group});}
   closeModal();renderContacts();renderWAChips();renderEmChips();
   showNotif('ct-notif',editId?'Contact updated.':'Contact added.','success');
 }
@@ -1518,7 +1478,7 @@ async function gsLoad(){
       const np=normP(sc.phone);
       if(seen.has(np)){skipped++;return;}
       seen.add(np);
-      contacts.push({id:nid++,name:sc.name,phone:sc.phone,email:sc.email||'',dob:sc.dob||'',group:sc.group||''});
+      contacts.push({id:nid++,name:sc.name,phone:sc.phone,group:sc.group||''});
       added++;
     });
     renderContacts();renderWAChips();renderEmChips();
@@ -1559,13 +1519,11 @@ function importCSV(e){
       const p=line.split(',');
       const name=(p[0]||'').trim().replace(/^"|"$/g,'');
       const phone=(p[1]||'').trim().replace(/^"|"$/g,'');
-      const email=(p[2]||'').trim().replace(/^"|"$/g,'');
-      const dob=(p[3]||'').trim().replace(/^"|"$/g,'');
-      const group=(p[4]||'').trim().replace(/^"|"$/g,'');
+      const group=(p[2]||'').trim().replace(/^"|"$/g,'');
       if(!name||!phone){skipped++;return;}
       const np=normP(phone);
       if(contacts.some(c=>normP(c.phone)===np)||seen.has(np)){skipped++;return;}
-      seen.add(np);contacts.push({id:nid++,name,phone,email,dob,group});added++;
+      seen.add(np);contacts.push({id:nid++,name,phone,group});added++;
     });
     renderContacts();renderWAChips();renderEmChips();
     let msg='Imported '+added+' contact'+(added!==1?'s':'')+'.';
@@ -1575,7 +1533,7 @@ function importCSV(e){
 }
 function exportCSV(){
   if(!contacts.length){showNotif('ct-notif','No contacts to export.','warn');return;}
-  dlCSV(['Name,Phone,Email,DOB,Group',...contacts.map(c=>'"'+c.name+'","'+c.phone+'","'+(c.email||'')+'","'+(c.dob||'')+'","'+(c.group||'')+'"')].join('\n'),'contacts.csv');
+  dlCSV(['Name,Phone,Group',...contacts.map(c=>'"'+c.name+'","'+c.phone+'","'+(c.group||'')+'"')].join('\n'),'contacts.csv');
 }
 
 // ── KEYBOARD ──────────────────────────────────────────────
